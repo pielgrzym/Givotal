@@ -49,18 +49,21 @@ def getToken():
         print "Wrong username or password"
         exit(1)
     dom = minidom.parseString(response.read())
-    return dom.getElementsByTagName('guid')[0].firstChild.data
+    return username, dom.getElementsByTagName('guid')[0].firstChild.data
 
 try:
     TOKEN = subprocess.check_output(['git', 'config', 'givotal.token'])
+    USERNAME = subprocess.check_output(['git', 'config', 'givotal.username'])
 except subprocess.CalledProcessError:
-    TOKEN = getToken()
+    USERNAME, TOKEN = getToken()
     choice = raw_input("Apply token to git global config? (Y/n)")
     choice = choice or 'Y'
     if choice in ['y', 'Y', 'Yes', 'yes']:
         subprocess.check_output(['git', 'config', '--global', 'givotal.token', TOKEN])
+        subprocess.check_output(['git', 'config', '--global', 'givotal.username', USERNAME])
     else:
         subprocess.check_output(['git', 'config', 'givotal.token', TOKEN])
+        subprocess.check_output(['git', 'config', 'givotal.username', USERNAME])
 
 
 try:
