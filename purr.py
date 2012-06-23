@@ -8,6 +8,33 @@ import urllib2
 from xml.dom import minidom
 
 
+def setup():
+    url = "http://www.pivotaltracker.com/services/v3/projects"
+    req = urllib2.Request(url, None, {'X-TrackerToken': TOKEN})
+    response = urllib2.urlopen(req)
+    dom = minidom.parseString(response.read())
+    projects = []
+    for p in dom.getElementsByTagName('project'):
+        projects.append([
+            p.getElementsByTagName('id')[0].firstChild.data,
+            p.getElementsByTagName('name')[0].firstChild.data
+        ])
+    print "Choose a project:"
+    for i, p in enumerate(projects):
+        print "    %d) %s" % (i + 1, p[1])
+    choice = raw_input("Enter number [1]: ")
+    choice = choice or 1
+    choice = int(choice)
+    if choice in range(1, len(projects) + 1):
+        selected_project = projects[choice - 1]
+        print "Adding project %s with id %s to local git config" % (selected_project[0],
+                selected_project[1])
+        subprocess.call(['git', 'config', 'givotal.projectid', selected_project[0]])
+    else:
+        print "Wrong choice:", choice
+        exit(1)
+
+
 def getToken():
     print "Pivotal token not found in your gitconfig."
     sysuser = getpass.getuser()
@@ -25,8 +52,12 @@ def getToken():
     return dom.getElementsByTagName('guid')[0].firstChild.data
 
 try:
-    API_KEY = subprocess.check_output(['git', 'config', 'givotal.token'])
+    TOKEN = subprocess.check_output(['git', 'config', 'givotal.token'])
 except subprocess.CalledProcessError:
-    API_KEY = subprocess.check_output(['git', 'config', 'givotal.token', getToken()])
+    TOKEN = subprocess.check_output(['git', 'config', 'givotal.token', getToken()])
 
-print API_KEY
+try:
+    PROJECT_ID = subprocess.check_output(['git', 'config', 'givotal.projectid'])
+    print PROJECT_ID
+except subprocess.CalledProcessError:
+    setup()
