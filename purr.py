@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python2
 # encoding: utf-8
 
 import os
@@ -44,6 +44,8 @@ def mk_backlog():
     basedir = "backlog"
     iterations = p.get("https://www.pivotaltracker.com/services/v3/projects/%s/iterations/backlog" % p.PROJECT_ID)
     current_dirs = []
+    if not iterations or not len(iterations['iteration']):
+        return
     for it, iteration in enumerate(iterations['iteration']):
         iteration = iteration['number'][0]
         for i, story in enumerate(iterations['iteration'][it]['stories'][0]['story']):
