@@ -5,19 +5,19 @@ import subprocess
 import getpass
 import urllib
 import urllib2
-from xml.dom import minidom
+from util.xmlhelper import xmltodict
 
 
 def setup():
     url = "http://www.pivotaltracker.com/services/v3/projects"
     req = urllib2.Request(url, None, {'X-TrackerToken': TOKEN})
     response = urllib2.urlopen(req)
-    dom = minidom.parseString(response.read())
+    dom = xmltodict(response.read())
     projects = []
-    for p in dom.getElementsByTagName('project'):
+    for p in dom['project']:
         projects.append([
-            p.getElementsByTagName('id')[0].firstChild.data,
-            p.getElementsByTagName('name')[0].firstChild.data
+            p['id'][0],
+            p['name'][0],
         ])
     print "Choose a project:"
     for i, p in enumerate(projects):
@@ -48,8 +48,8 @@ def getToken():
     except urllib2.HTTPError:
         print "Wrong username or password"
         exit(1)
-    dom = minidom.parseString(response.read())
-    return username, dom.getElementsByTagName('guid')[0].firstChild.data
+    dom = xmltodict(response.read())
+    return username, dom['guid'][0]
 
 try:
     TOKEN = subprocess.check_output(['git', 'config', 'givotal.token'])
