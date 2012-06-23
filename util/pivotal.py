@@ -12,7 +12,7 @@ class Pivotal(object):
             self.USERNAME = subprocess.check_output(['git', 'config', 'givotal.username'])
         except subprocess.CalledProcessError:
             self.TOKEN, self.USERNAME = self.getToken()
-            choice = raw_input("Apply token to git global config? (Y/n)")
+            choice = raw_input("Apply token to git global config? (Y/n) ")
             choice = choice or 'Y'
             if choice in ['y', 'Y', 'Yes', 'yes']:
                 subprocess.check_output(['git', 'config', '--global', 'givotal.token', self.TOKEN])
