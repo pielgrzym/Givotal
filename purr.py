@@ -1,72 +1,8 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import subprocess
-import getpass
-import urllib
-import urllib2
-from util.xmlhelper import xmltodict
+from util.pivotal import Pivotal
 
+p = Pivotal()
 
-def setup():
-    url = "http://www.pivotaltracker.com/services/v3/projects"
-    req = urllib2.Request(url, None, {'X-TrackerToken': TOKEN})
-    response = urllib2.urlopen(req)
-    dom = xmltodict(response.read())
-    projects = []
-    for p in dom['project']:
-        projects.append([
-            p['id'][0],
-            p['name'][0],
-        ])
-    print "Choose a project:"
-    for i, p in enumerate(projects):
-        print "    %d) %s" % (i + 1, p[1])
-    choice = raw_input("Enter number [1]: ")
-    choice = choice or 1
-    choice = int(choice)
-    if choice in range(1, len(projects) + 1):
-        selected_project = projects[choice - 1]
-        print "Adding project %s with id %s to local git config" % (selected_project[0],
-                selected_project[1])
-        subprocess.call(['git', 'config', 'givotal.projectid', selected_project[0]])
-    else:
-        print "Wrong choice:", choice
-        exit(1)
-
-
-def getToken():
-    print "Pivotal token not found in your gitconfig."
-    sysuser = getpass.getuser()
-    username = raw_input("Username [%s]:" % sysuser)
-    username = username or sysuser
-    password = getpass.getpass()
-    data = urllib.urlencode({'username': username, 'password': password})
-    request = urllib2.Request("https://www.pivotaltracker.com/services/v3/tokens/active", data)
-    try:
-        response = urllib2.urlopen(request)
-    except urllib2.HTTPError:
-        print "Wrong username or password"
-        exit(1)
-    dom = xmltodict(response.read())
-    return username, dom['guid'][0]
-
-try:
-    TOKEN = subprocess.check_output(['git', 'config', 'givotal.token'])
-    USERNAME = subprocess.check_output(['git', 'config', 'givotal.username'])
-except subprocess.CalledProcessError:
-    USERNAME, TOKEN = getToken()
-    choice = raw_input("Apply token to git global config? (Y/n)")
-    choice = choice or 'Y'
-    if choice in ['y', 'Y', 'Yes', 'yes']:
-        subprocess.check_output(['git', 'config', '--global', 'givotal.token', TOKEN])
-        subprocess.check_output(['git', 'config', '--global', 'givotal.username', USERNAME])
-    else:
-        subprocess.check_output(['git', 'config', 'givotal.token', TOKEN])
-        subprocess.check_output(['git', 'config', 'givotal.username', USERNAME])
-
-
-try:
-    PROJECT_ID = subprocess.check_output(['git', 'config', 'givotal.projectid'])
-except subprocess.CalledProcessError:
-    setup()
+iterations = p.get("https://www.pivotaltracker.com/services/v3/projects/%s/iterations" % p.PROJECT_ID)
