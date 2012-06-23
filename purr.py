@@ -10,7 +10,6 @@ from xml.dom import minidom
 
 def setup():
     url = "http://www.pivotaltracker.com/services/v3/projects"
-    print 'token', TOKEN
     req = urllib2.Request(url, None, {'X-TrackerToken': TOKEN})
     response = urllib2.urlopen(req)
     dom = minidom.parseString(response.read())
@@ -63,7 +62,6 @@ except subprocess.CalledProcessError:
     else:
         subprocess.check_output(['git', 'config', 'givotal.token', TOKEN])
 
-print TOKEN
 
 try:
     PROJECT_ID = subprocess.check_output(['git', 'config', 'givotal.projectid'])
