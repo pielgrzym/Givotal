@@ -28,7 +28,7 @@ fetch)
         git checkout $PREV_REF
 ;;
 current)
-        git grep "Name:" refs/heads/pivotal/master:current | sed 's/^[^[:blank:]]*//;s/^[ \t0-9\.]*//' | sort -h
+        git grep "Name:" refs/heads/pivotal/master:current | sed 's/^[^[:blank:]]*//' | sort -h | sed 's/^[ \t0-9\.]*//' 
 ;;
 *)
 	usage
