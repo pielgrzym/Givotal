@@ -32,7 +32,7 @@ def mk_current():
             storyfile.write(u"Current state: %s \n" % story['current_state'][0])
             storyfile.write(u"Description:\n%s \n" % story['description'][0])
             story_colors = {
-                    'feature':'\033[1;32m',
+                    'feature': '\033[1;32m',
                     'bug': '\033[1;31m',
                     'chore': '\033[1;30m',
                     }
@@ -42,8 +42,8 @@ def mk_current():
                 owner = ""
             story_color = story_colors[story['story_type'][0]]
             if story['current_state'][0] == 'accepted':
-                story_color = '\033[36m'
-            storyfile.write(u"__PP|%d|%s #%s %s (%s%s)\n" % (
+                story_color = '\033[1;36m'
+            storyfile.write(u"__PP|%d|%s#%s %s (%s%s)\n" % (
                 i,
                 story_color,
                 story['id'][0],
