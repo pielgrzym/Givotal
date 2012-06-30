@@ -31,6 +31,13 @@ def mk_current():
             storyfile.write(u"Type: %s \n" % story['story_type'][0])
             storyfile.write(u"Current state: %s \n" % story['current_state'][0])
             storyfile.write(u"Description:\n%s \n" % story['description'][0])
+            story_colors = {
+                    'feature':'\033[1;32m',
+                    'bug': '\033[1;31m',
+                    'chore': '\033[1;30m',
+                    }
+            story_color = story_colors[story['story_type'][0]]
+            storyfile.write(u"__PP|%d|%s #%s %s \n" % (i, story_color, story['id'][0], story['name'][0]))
     # now time to unlink stale stories
     for story in os.listdir(basedir):
         if story not in current_dirs:
