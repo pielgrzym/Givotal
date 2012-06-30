@@ -25,7 +25,7 @@ fetch)
         purr.py --backlog
         git add backlog
         git commit -m "Fetchted pivotal data" &>/dev/null
-        git checkout $PREV_REF
+        git checkout $PREV_REF &>/dev/null
 ;;
 current)
         git grep "^__PP|" $GIVOTAL_REF:current | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
