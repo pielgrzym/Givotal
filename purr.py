@@ -36,8 +36,19 @@ def mk_current():
                     'bug': '\033[1;31m',
                     'chore': '\033[1;30m',
                     }
+            if 'owned_by' in story:
+                owner = '\033[1;34m' + "".join([x[0] for x in story['owned_by'][0].split(" ")])
+            else:
+                owner = ""
             story_color = story_colors[story['story_type'][0]]
-            storyfile.write(u"__PP|%d|%s #%s %s \n" % (i, story_color, story['id'][0], story['name'][0]))
+            storyfile.write(u"__PP|%d|%s #%s %s (%s%s)\n" % (
+                i,
+                story_color,
+                story['id'][0],
+                story['name'][0],
+                owner,
+                story_color,
+                ))
     # now time to unlink stale stories
     for story in os.listdir(basedir):
         if story not in current_dirs:
