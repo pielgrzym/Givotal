@@ -12,6 +12,7 @@ parser = argparse.ArgumentParser(prog="purr",
         description="Pivotal Update Remote Registry tool")
 parser.add_argument('-c', '--current', action='store_true', help="Fetch stories from current")
 parser.add_argument('-b', '--backlog', action='store_true', help="Fetch stories from backlog")
+parser.add_argument('-m', '--mywork', action='store_true', help="Fetch stories assigned to user")
 
 
 def populate_dirs(stories, prefix=""):
@@ -77,6 +78,25 @@ def mk_backlog():
         populate_dirs(iterations['iteration'][it]['stories'][0]['story'], prefix=os.path.join("backlog", iteration_number))
 
 
+def mk_mywork():
+    print "Fetching my work..."
+    try:
+        initials = subprocess.check_output(['git', 'config', 'givotal.userinitials'])
+    except subprocess.CalledProcessError:
+        initials = raw_input("Enter your pivotal user initials: ")
+        if len(initials) > 2:
+            print "Too long initials string, aborting..."
+            exit(1)
+        subprocess.check_output(['git', 'config', 'givotal.userinitials', initials])
+    initials = initials.strip()
+    stories = p.get("https://www.pivotaltracker.com/services/v3/projects/%s/stories?filter=mywork:\"%s\"" % (
+        p.PROJECT_ID, initials))
+    if not stories:
+        "My work: no stories fetched"
+        exit(1)
+    populate_dirs(stories['story'], prefix="mywork")
+
+
 if __name__ == "__main__":
 
     p = Pivotal()
@@ -85,3 +105,5 @@ if __name__ == "__main__":
         mk_current()
     if args.backlog:
         mk_backlog()
+    if args.mywork:
+        mk_mywork()

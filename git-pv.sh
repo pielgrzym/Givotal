@@ -24,6 +24,8 @@ fetch)
         git add current
         purr.py --backlog
         git add backlog
+        purr.py --mywork
+        git add mywork
         git commit -m "Fetchted pivotal data" &>/dev/null
         git checkout $PREV_REF &>/dev/null
 ;;
@@ -36,6 +38,9 @@ backlog | bck)
                 echo -e "\033[0;30m\033[47m * $iteration | =========================== \033[0m" 
                 git grep "^__PP|" $GIVOTAL_REF:backlog/$iteration | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
         done <<< "$(git ls-tree $GIVOTAL_REF:backlog --name-only | sort -r)"
+;;
+mywork | my)
+        git grep "^__PP|" $GIVOTAL_REF:mywork | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
 ;;
 *)
 	usage
