@@ -33,7 +33,7 @@ current)
 backlog)
         while read -r iteration
         do
-                echo -e "\033[0m\033[30m\033[47m * $iteration | =========================== \033[0m" 
+                echo -e "\033[0;30m\033[47m * $iteration | =========================== \033[0m" 
                 git grep "^__PP|" $GIVOTAL_REF:backlog/$iteration | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
         done <<< "$(git ls-tree $GIVOTAL_REF:backlog --name-only | sort -r)"
 ;;
