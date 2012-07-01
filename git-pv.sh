@@ -28,6 +28,7 @@ fetch)
         git add mywork
         git commit -m "Fetchted pivotal data" &>/dev/null
         git checkout $PREV_REF &>/dev/null
+        echo -e "\033[1;36mDone fetching pivotal data\033[0m"
 ;;
 current | cur)
         git grep "^__PP|" $GIVOTAL_REF:current | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
