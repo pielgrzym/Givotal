@@ -27,10 +27,10 @@ fetch)
         git commit -m "Fetchted pivotal data" &>/dev/null
         git checkout $PREV_REF &>/dev/null
 ;;
-current)
+current | cur)
         git grep "^__PP|" $GIVOTAL_REF:current | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
 ;;
-backlog)
+backlog | bck)
         while read -r iteration
         do
                 echo -e "\033[0;30m\033[47m * $iteration | =========================== \033[0m" 
