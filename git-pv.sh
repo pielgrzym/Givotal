@@ -9,6 +9,10 @@ ACTION="$1"; shift
 test -z "$GIVOTAL_REF" && GIVOTAL_REF="$(git config givotal.ref)"
 test -z "$GIVOTAL_REF" && GIVOTAL_REF="refs/heads/pivotal/master"
 
+function print_tasks {
+        git grep "^__PP|" $GIVOTAL_REF:$1 | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
+}
+
 case "$ACTION" in
 fetch)
         PREV_REF="$(git symbolic-ref HEAD 2>/dev/null)"
@@ -31,17 +35,17 @@ fetch)
         echo -e "\033[1;36mDone fetching pivotal data\033[0m"
 ;;
 current | cur)
-        git grep "^__PP|" $GIVOTAL_REF:current | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
+        print_tasks "current"
 ;;
 backlog | bck)
         while read -r iteration
         do
                 echo -e "\033[0;30m\033[47m * $iteration | =========================== \033[0m" 
-                git grep "^__PP|" $GIVOTAL_REF:backlog/$iteration | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
+                print_tasks "backlog/$iteration"
         done <<< "$(git ls-tree $GIVOTAL_REF:backlog --name-only | sort -r)"
 ;;
 mywork | my)
-        git grep "^__PP|" $GIVOTAL_REF:mywork | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
+        print_tasks "mywork"
 ;;
 *)
 	usage
