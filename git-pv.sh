@@ -121,11 +121,11 @@ deliver | dlv)
         echo "Do you want to rebase against \"$INTEGRATION_BRANCH\" branch? [y]"
         read YNO
         case $YNO in
-                [yY] )
-                        git rebase -i $INTEGRATION_BRANCH
+                [nN] )
                         git push origin $CURRENT_REF
                         ;;
                 *)
+                        git rebase -i $INTEGRATION_BRANCH
                         git push origin $CURRENT_REF
                         ;;
         esac
