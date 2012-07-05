@@ -75,7 +75,19 @@ def mk_backlog():
         return
     for it, iteration in enumerate(iterations['iteration']):
         iteration_number = iteration['number'][0]
-        populate_dirs(iterations['iteration'][it]['stories'][0]['story'], prefix=os.path.join("backlog", iteration_number))
+        if iterations['iteration'][it]['stories'][0]:
+            populate_dirs(iterations['iteration'][it]['stories'][0]['story'], prefix=os.path.join("backlog", iteration_number))
+        else:
+            iteration_dir = os.path.join('backlog', iteration_number)
+            try:
+                for story in os.listdir(iteration_dir):
+                    story_dir = os.path.join(iteration_dir, story)
+                    print story_dir
+                    shutil.rmtree(story_dir)
+                    with open("/dev/null", 'w') as null:
+                        subprocess.call(['git', 'rm', '-rf', os.path.join(story_dir)], stderr=null)
+            except:
+                pass
 
 
 def mk_mywork():
