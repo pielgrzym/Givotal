@@ -27,6 +27,11 @@ class Pivotal(object):
             self.PROJECT_ID = self.setupProjectId()
         self.PROJECT_ID = self.PROJECT_ID.strip()
 
+        try:
+            subprocess.check_output(['git', 'config', 'givotal.integration-branch'])
+        except subprocess.CalledProcessError:
+            self.setupIntegrationBranch()
+
     def get(self, url):
         req = urllib2.Request(url, None, {'X-TrackerToken': self.TOKEN})
         response = urllib2.urlopen(req)
@@ -71,3 +76,7 @@ class Pivotal(object):
         else:
             print "Wrong choice:", choice
             exit(1)
+
+    def setupIntegrationBranch(self):
+        branch = raw_input("Enter integration branch name [devel]: ") or "devel"
+        subprocess.call(['git', 'config', 'givotal.integration-branch', branch])

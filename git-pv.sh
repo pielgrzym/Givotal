@@ -115,7 +115,20 @@ deliver | dlv)
                 modify_story $STORY_ID "?story\[current_state\]=delivered"
         else
                 echo "You are not on a pivotal story branch"
+                exit
         fi
+        INTEGRATION_BRANCH=$(git config givotal.integration-branch)
+        echo "Do you want to rebase against \"$INTEGRATION_BRANCH\" branch? [y]"
+        read YNO
+        case $YNO in
+                [yY] )
+                        git rebase -i $INTEGRATION_BRANCH
+                        git push origin $CURRENT_REF
+                        ;;
+                *)
+                        git push origin $CURRENT_REF
+                        ;;
+        esac
 ;;
 *)
 	usage
