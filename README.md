@@ -8,6 +8,7 @@ Features:
 * caching pivotal data using git orphaned branch - using plain files - fetching data using git mechanisms
 * hacker-friendly - written mostly in bash/python - easy to extend and customize
 * color output - yay!
+* configuration per repository or global using git builtin config system
 
 Installation
 ------------
