@@ -45,16 +45,21 @@ def populate_dirs(stories, prefix=""):
             else:
                 owner = ""
             story_color = story_colors[story['story_type'][0]]
+            extra = ""
             if story['current_state'][0] == 'accepted':
                 story_color = '\033[1;36m'
             elif story['current_state'][0] == 'rejected':
                 story_color = '\033[0;31m'
-            storyfile.write(u"__PP|%d|%s#%s %s %s\n" % (
+                extra = "\033[1;31m[REJECTED]"
+            elif story['current_state'][0] == 'delivered':
+                extra = "\033[1;33m[DELIVERED]"
+            storyfile.write(u"__PP|%d|%s#%s %s %s %s\n" % (
                 i,
                 story_color,
                 story['id'][0],
                 story['name'][0],
-                "(%s%s)" % (owner, story_color) if owner else ""
+                "(%s%s)" % (owner, story_color) if owner else "",
+                extra if extra else "",
                 ))
     # now time to unlink stale stories
     for story in os.listdir(prefix):
