@@ -98,7 +98,7 @@ start | s)
 show | sh)
         STORY_PATH=$(git grep $PARAM1 $GIVOTAL_REF | head -n 1)
         if [ -n "$STORY_PATH" ]; then
-                git show $(echo $STORY_PATH | cut -d":" -f1,2) | head -n 5
+                git show $(echo $STORY_PATH | cut -d":" -f1,2) | grep -v "^__PP"
         fi
         ;;
 finish | f)
