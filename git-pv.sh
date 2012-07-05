@@ -65,20 +65,20 @@ fetch)
         git commit -m "Fetchted pivotal data" &>/dev/null
         git checkout $PREV_REF &>/dev/null
         echo -e "\033[1;36mDone fetching pivotal data\033[0m"
-;;
+        ;;
 current | cur)
         print_tasks "current"
-;;
+        ;;
 backlog | bck)
         while read -r iteration
         do
                 echo -e "\033[0;30m\033[47m * $iteration | =========================== \033[0m" 
                 print_tasks "backlog/$iteration"
         done <<< "$(git ls-tree $GIVOTAL_REF:backlog --name-only | sort -h)"
-;;
+        ;;
 mywork | my)
         print_tasks "mywork"
-;;
+        ;;
 start | s)
         test -z "$PARAM1" && usage
         STORY_ID="$PARAM1"
@@ -94,7 +94,13 @@ start | s)
                 exit
         fi
         git checkout -b $BRANCH_NAME
-;;
+        ;;
+show | sh)
+        STORY_PATH=$(git grep $PARAM1 $GIVOTAL_REF | head -n 1)
+        if [ -n "$STORY_PATH" ]; then
+                git show $(echo $STORY_PATH | cut -d":" -f1,2) | head -n 5
+        fi
+        ;;
 finish | f)
         CURRENT_REF="$(git symbolic-ref HEAD 2>/dev/null)"
         CURRENT_REF=${CURRENT_REF##refs/heads/}
@@ -105,7 +111,7 @@ finish | f)
         else
                 echo "You are not on a pivotal story branch"
         fi
-;;
+        ;;
 deliver | dlv)
         CURRENT_REF="$(git symbolic-ref HEAD 2>/dev/null)"
         CURRENT_REF=${CURRENT_REF##refs/heads/}
@@ -129,7 +135,7 @@ deliver | dlv)
                         git push origin $CURRENT_REF
                         ;;
         esac
-;;
+        ;;
 *)
 	usage
 esac
