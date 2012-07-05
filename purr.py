@@ -47,6 +47,8 @@ def populate_dirs(stories, prefix=""):
             story_color = story_colors[story['story_type'][0]]
             if story['current_state'][0] == 'accepted':
                 story_color = '\033[1;36m'
+            elif story['current_state'][0] == 'rejected':
+                story_color = '\033[0;31m'
             storyfile.write(u"__PP|%d|%s#%s %s %s\n" % (
                 i,
                 story_color,
