@@ -31,7 +31,7 @@ def populate_dirs(stories, prefix=""):
             pass
         current_dirs.append(story['id'][0])
         with codecs.open(os.path.join(path, 'story'), 'w', 'utf-8') as storyfile:
-            storyfile.write(u"Name: %d. %s \n" % (i, story['name'][0]))
+            storyfile.write(u"Name: %s \n" % story['name'][0])
             storyfile.write(u"Type: %s \n" % story['story_type'][0])
             storyfile.write(u"Current state: %s \n" % story['current_state'][0])
             storyfile.write(u"Description:\n%s \n" % story['description'][0])
