@@ -1,13 +1,18 @@
 Givotal
 =======
 
-Integrate git and pivotal. Givotal uses a simple python command to fetch and parse pivotal api xml. 
-All pivotal data is being cached in git local orphaned branch (a branch disconnected from project history).
+Integrate git and pivotal.
+
+Features:
+* fast pivotal data fetching using simple python script (purr.py)
+* caching pivotal data using git orphaned branch - using plain files - fetching data using git mechanisms
+* hacker-friendly - written mostly in bash/python - easy to extend and customize
+* color output - yay!
 
 Installation
 ------------
 
-Clone the repository and put it in your $PATH (either by placing repo inside $PATH or prepending repository path like below):
+Clone the repository and put it in your `$PATH` (either by placing repo inside `$PATH` or prepending repository path like below):
 
     export PATH=/givotal/path/to/repo:$PATH
 
@@ -24,7 +29,7 @@ Fetch data:
         2) Fast Swine
         3) Hog Travel
     Enter number [1]:
-    Adding project Agile Pigwith id 12345 to local git config
+    Adding project Agile Pig with id 12345 to local git config
     Enter integration branch name [devel]: 
     Fetching current..
     Fetching backlog..
