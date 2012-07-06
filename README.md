@@ -80,7 +80,7 @@ Finish a story (being on a branch that belongs to this story):
 Deliver a story (being on a branch that belongs to this story):
 
     git pivotal deliver
-    Do you want to reabase against 'devel' branch? [y]
+    Do you want to rebase against 'devel' branch? [y]
 
 Review a story
 
@@ -107,7 +107,7 @@ There are dozens of features to come:
 
 * rating stories
 * bash/zsh autocompletion of story ids and more
-* story review/accept/reject (with automatic fetch and branch checkout)
+* <del>story review/accept/reject (with automatic fetch and branch checkout)</del>
 * ability to create custom workflow hooks inside .git/givotal-hooks dir
 * commenting stories
 * listing latest comments
