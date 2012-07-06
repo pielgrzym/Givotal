@@ -90,7 +90,7 @@ start | s)
         test -z "$PARAM1" && usage
         STORY_ID="$PARAM1"
         USERNAME=$(git config user.name)
-        modify_story $STORY_ID "?story\[current_state\]=started&story\[owned_by\]=${USERNAME/ /%20}"
+        modify_story $STORY_ID "?story\[current_state\]=started&story\[owned_by\]=${USERNAME// /%20}"
         echo -n "Branch suffix: "
         read BRANCH_SUFFIX
         BRANCH_NAME="$PARAM1-${BRANCH_SUFFIX/ /}"
@@ -158,7 +158,7 @@ review | rv)
                 fi
                 git fetch $REMOTE
                 BRANCH=$(git branch -r | grep "$REMOTE/$PARAM1-")
-                LBRANCH=${BRANCH/$REMOTE\//} # remote/1234-my -> 1234-my
+                LBRANCH=${BRANCH##$REMOTE/} # remote/1234-my -> 1234-my
                 if $(git show-ref --quiet $LBRANCH); then
                         echo "Local branch $LBRANCH exists"
                         echo "Merge remote (default) or replace? [m/r] "
