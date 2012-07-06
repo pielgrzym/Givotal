@@ -39,11 +39,18 @@ def populate_dirs(stories, prefix=""):
                     'feature': '\033[1;32m',
                     'bug': '\033[1;31m',
                     'chore': '\033[1;30m',
+                    'release': '\033[1;37m\033[45m',
                     }
             if 'owned_by' in story:
                 owner = '\033[1;34m' + "".join([x[0] for x in story['owned_by'][0].split(" ")])
             else:
                 owner = ""
+            story_types = {
+                    'feature': u'Ϝ',
+                    'bug': u'Ḇ',
+                    'chore': u'с',
+                    'release': u'▶',
+                    }
             story_color = story_colors[story['story_type'][0]]
             extra = ""
             if story['current_state'][0] == 'accepted':
@@ -53,9 +60,15 @@ def populate_dirs(stories, prefix=""):
                 extra = "\033[1;31m[REJECTED]"
             elif story['current_state'][0] == 'delivered':
                 extra = "\033[1;33m[DELIVERED]"
-            storyfile.write(u"__PP|%d|%s#%s %s %s %s\n" % (
+            if story['story_type'][0] == 'release':
+                pad = 80 - len(story['name'][0])
+                if pad > 0:
+                    spaces = ' ' * pad
+                extra = extra + spaces
+            storyfile.write(u"__PP|%d|%s%s %s %s %s %s \033[0m \n" % (
                 i,
                 story_color,
+                story_types[story['story_type'][0]],
                 story['id'][0],
                 story['name'][0],
                 "(%s%s)" % (owner, story_color) if owner else "",
