@@ -69,8 +69,8 @@ class Pivotal(object):
         choice = int(choice)
         if choice in range(1, len(projects) + 1):
             selected_project = projects[choice - 1]
-            print "Adding project %s with id %s to local git config" % (selected_project[0],
-                    selected_project[1])
+            print "Adding project %s with id %s to local git config" % (selected_project[1],
+                    selected_project[0])
             subprocess.call(['git', 'config', 'givotal.projectid', selected_project[0]])
             return selected_project[0]
         else:
