@@ -19,7 +19,7 @@ function modify_story {
         TOKEN=$(git config givotal.token)
         PROJECT_ID=$(git config givotal.projectid)
         curl -s -o /dev/null -H "X-TrackerToken: $TOKEN" -X PUT -H "Content-Length: 0" \
-              "http://www.pivotaltracker.com/services/v3/projects/$PROJECT_ID/stories/$STORY_ID$2" 1> /dev/null
+              "https://www.pivotaltracker.com/services/v3/projects/$PROJECT_ID/stories/$STORY_ID$2" 1> /dev/null
         if [ "${?}" -ne "0" ]; then
                 echo "Error: story modification failed"
                 exit 1
