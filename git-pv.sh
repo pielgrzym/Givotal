@@ -98,7 +98,7 @@ start | s)
 show | sh)
         STORY_PATH=$(git grep $PARAM1 $GIVOTAL_REF | head -n 1)
         if [ -n "$STORY_PATH" ]; then
-                git show $(echo $STORY_PATH | cut -d":" -f1,2) | grep -v "^__PP"
+                git show $(echo $STORY_PATH | cut -d":" -f1,2) | grep -v "^__"
         fi
         ;;
 finish | f)
@@ -136,6 +136,52 @@ deliver | dlv)
                         ;;
         esac
         ;;
+review | rv)
+        test -z "$PARAM1" && usage
+        STORY_PATH=$(git grep $PARAM1 $GIVOTAL_REF | head -n 1)
+        if [ -n "$STORY_PATH" ]; then
+                INITIALS=$(git show $(echo $STORY_PATH | cut -d":" -f1,2) | grep "^__OWNER_INITIALS" | cut -d":" -f2)
+                REMOTE=$(git config givotal.remote-$INITIALS)
+                if [ -z "$REMOTE" ]; then
+                        echo "No remote repository defined for initials $INITIALS"
+                        echo -n "Provide remote name (Ctrl-c to abort): "
+                        read REMOTE
+                        git config givotal.remote-$INITIALS $REMOTE
+                        echo "Remote $REMOTE added to local givotal config"
+                fi
+                git fetch $REMOTE
+                BRANCH=$(git branch -r | grep "$REMOTE/$PARAM1-")
+                LBRANCH=${BRANCH/$REMOTE\//} # remote/1234-my -> 1234-my
+                if $(git show-ref --quiet $LBRANCH); then
+                        echo "Local branch $LBRANCH exists"
+                        echo "Merge remote (default) or replace? [m/r] "
+                        read MR
+                        case $MR in
+                                [rR] )
+                                        # replace branch in case there was a forced update
+                                        git checkout $(git config givotal.integration-branch)
+                                        git branch -D $LBRANCH
+                                        git checkout -t $BRANCH
+                                        ;;
+                                *)
+                                        # just add fixes after redelivery
+                                        git checkout $LBRANCH
+                                        git merge $BRANCH
+                                        ;;
+                        esac
+                else
+                        # create new tracking branch to see the work
+                        git checkout -t $BRANCH
+                fi
+        fi
+        ;;
+accept | ac)
+        echo "TODO"
+        ;;
+reject | rj)
+        echo "TODO"
+        ;;
 *)
 	usage
+        ;;
 esac

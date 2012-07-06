@@ -42,7 +42,9 @@ def populate_dirs(stories, prefix=""):
                     'release': '\033[1;37m\033[45m',
                     }
             if 'owned_by' in story:
-                owner = '\033[1;34m' + "".join([x[0] for x in story['owned_by'][0].split(" ")])
+                owner_initials = "".join([x[0] for x in story['owned_by'][0].split(" ")])
+                owner = '\033[1;34m' + owner_initials
+                storyfile.write(u"__OWNER_INITIALS:%s \n" % owner_initials)
             else:
                 owner = ""
             story_types = {
