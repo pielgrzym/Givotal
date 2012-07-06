@@ -19,7 +19,7 @@ Clone the repository and put it in your `$PATH` (either by placing repo inside `
 
 Fetch data:
 
-    git pivotal fetch
+    git pivotal fetchall
     Creating Givotal orphaned branch...
     Pivotal token not found in your gitconfig.
     Username [myusername]: goodfella
@@ -42,6 +42,14 @@ You are ready to roll.
 
 Usage
 -----
+
+Update pivotal data:
+
+    git pivotal fetchall
+
+Update just current and mywork:
+
+    git pivotal fetch
 
 Show current:
 
@@ -73,6 +81,10 @@ Deliver a story (being on a branch that belongs to this story):
 
     git pivotal deliver
     Do you want to reabase against 'devel' branch? [y]
+
+Review a story
+
+   git pivotal review 123456
 
 
 To be continued
