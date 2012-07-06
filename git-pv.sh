@@ -222,7 +222,7 @@ reject | rj)
                 PROJECT_ID=$(git config givotal.projectid)
                 curl -H "X-TrackerToken: $TOKEN" -X POST -H "Content-type: application/xml" \
                         -d "<note><text>$MSG</text></note>" \
-                        http://www.pivotaltracker.com/services/v3/projects/$PROJECT_ID/stories/$STORY_ID/notes
+                        https://www.pivotaltracker.com/services/v3/projects/$PROJECT_ID/stories/$STORY_ID/notes
                 rm -rf $TMP_FILENAME
         else
                 echo "Not a story branch"
