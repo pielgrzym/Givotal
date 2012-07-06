@@ -93,7 +93,7 @@ start | s)
         modify_story $STORY_ID "?story\[current_state\]=started&story\[owned_by\]=${USERNAME// /%20}"
         echo -n "Branch suffix: "
         read BRANCH_SUFFIX
-        BRANCH_NAME="$PARAM1-${BRANCH_SUFFIX/ /}"
+        BRANCH_NAME="$PARAM1-${BRANCH_SUFFIX// /-}"
         register_story $PARAM1 $BRANCH_NAME
         if $(git show-ref --quiet $BRANCH_NAME); then
                 echo "Branch $BRANCH_NAME exists. Checking out..."
