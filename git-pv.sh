@@ -133,7 +133,7 @@ deliver | dlv)
                 exit
         fi
         echo "Do you want to rebase against \"$INTEGRATION_BRANCH\" branch?"
-        echo "(if the task is \033[1;31m redelivered\033[0m answer 'no') [y]"
+        echo -en "(if the task is \033[1;31m redelivered\033[0m answer 'no') [y] "
         read YNO
         case $YNO in
                 [nN] )
@@ -190,7 +190,7 @@ accept | ac)
         STORY_ID=${STORY_REF%%-*}
         if [ -n $STORY_ID ]; then
                 modify_story $STORY_ID "?story\[current_state\]=accepted"
-                echo "Merge into '$INTEGRATION_BRANCH'? [Y/n]"
+                echo -en "\033[1;34mMerge story into '$INTEGRATION_BRANCH'? [Y/n]\033[0m "
                 read YNO
                 case $YNO in
                         [nN] )
@@ -220,9 +220,9 @@ reject | rj)
                 modify_story $STORY_ID "?story\[current_state\]=rejected"
                 TOKEN=$(git config givotal.token)
                 PROJECT_ID=$(git config givotal.projectid)
-                curl -H "X-TrackerToken: $TOKEN" -X POST -H "Content-type: application/xml" \
+                curl -s -o /dev/null -H "X-TrackerToken: $TOKEN" -X POST -H "Content-type: application/xml" \
                         -d "<note><text>$MSG</text></note>" \
-                        https://www.pivotaltracker.com/services/v3/projects/$PROJECT_ID/stories/$STORY_ID/notes
+                        https://www.pivotaltracker.com/services/v3/projects/$PROJECT_ID/stories/$STORY_ID/notes 1>/dev/null
                 rm -rf $TMP_FILENAME
         else
                 echo "Not a story branch"
