@@ -124,7 +124,7 @@ deliver | dlv)
                 exit
         fi
         INTEGRATION_BRANCH=$(git config givotal.integration-branch)
-        echo "Do you want to rebase against \"$INTEGRATION_BRANCH\" branch? [y]"
+        echo "Do you want to rebase against \"$INTEGRATION_BRANCH\" branch (the task is \033[1;31mredelivered\033[0m)? [y]"
         read YNO
         case $YNO in
                 [nN] )
