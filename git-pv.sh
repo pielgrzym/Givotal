@@ -51,7 +51,7 @@ case "$ACTION" in
 fetch | fetchall)
         PREV_REF="$(git symbolic-ref HEAD 2>/dev/null)"
         PREV_REF=${PREV_REF##refs/heads/}
-        if $(git show-ref --quiet $GIVOTAL_REF); then
+        if $(git show-ref --quiet "$GIVOTAL_REF"); then
                 git checkout "$GIVOTAL_REF" &>/dev/null
         else
                 say "Creating Givotal orphaned branch..."
