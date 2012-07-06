@@ -84,7 +84,7 @@ Deliver a story (being on a branch that belongs to this story):
 
 Review a story
 
-   git pivotal review 123456
+    git pivotal review 123456
 
 
 To be continued
