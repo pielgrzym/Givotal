@@ -86,6 +86,19 @@ Review a story
 
     git pivotal review 123456
 
+Accept a story under review:
+
+    git pivotal review 123456
+    git pivotal accept
+    Merge into 'devel'? [Y/n] y
+
+Reject a story under review:
+
+    git pivotal review 123456
+    git pivotal accept
+
+This will fire up git core.editor and you can post a reason why the story was rejected.
+    
 
 To be continued
 ---------------
