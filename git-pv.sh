@@ -163,6 +163,9 @@ review | rv)
                 BRANCH="${BRANCH##*[[:blank:]]}"
                 LBRANCH=${BRANCH##$REMOTE/} # remote/1234-my -> 1234-my
                 if $(git show-ref --quiet "$LBRANCH"); then
+                        # create new tracking branch to see the work
+                        git checkout -t "$BRANCH"
+                else
                         echo "Local branch $LBRANCH exists"
                         echo "Merge remote (default) or replace? [m/r] "
                         read MR
@@ -179,9 +182,6 @@ review | rv)
                                         git merge "$BRANCH"
                                         ;;
                         esac
-                else
-                        # create new tracking branch to see the work
-                        git checkout -t "$BRANCH"
                 fi
         fi
         ;;
