@@ -35,6 +35,7 @@ function register_story {
         if [ -d "branches" ]; then
                 if [ -e "branches/$1" ]; then
                         echo "Story already started"
+                        git checkout "$prev_ref" &>/dev/null
                         exit 1
                 fi
                 echo "$2" > branches/$1
