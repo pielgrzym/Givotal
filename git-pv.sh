@@ -48,6 +48,26 @@ function register_story {
         git checkout "$prev_ref" &>/dev/null
 }
 
+function get_story_path {
+        story_id=$1
+        matches=($(git grep -l "$story_id" "$givotal_ref" current backlog | sort ))
+        if [ ${#matches[@]} -gt 1 ]; then
+                echo "Ambigous story id: $story_id"
+                return 1
+        fi
+        # echo $(git grep -l "$story_id" "$givotal_ref" current backlog | sort )
+        # for m in ${matches[@]}; do
+        #         echo "Candidate: $m"
+        # done
+        if [ -n ${matches[0]} ]; then
+                echo "${matches[0]}"
+                return
+        else
+                echo 0
+                return
+        fi
+}
+
 case "$action" in
 fetch | fetchall)
         prev_ref="$(git symbolic-ref HEAD 2>/dev/null)"
@@ -106,9 +126,12 @@ start | s)
         git checkout -b "$branch_name"
         ;;
 show | sh)
-        story_path=$(git grep "$param1" "$givotal_ref" | head -n 1)
+        # get_story_path "$param1"
+        # exit
+        story_path=$(get_story_path "$param1")
         if [ -n "$story_path" ]; then
-                git show $(echo "$story_path" | cut -d":" -f1,2) | grep -v "^__"
+                echo $story_path
+                git show "$story_path" | grep -v "^__"
         fi
         ;;
 finish | f)
@@ -148,25 +171,43 @@ deliver | dlv)
         ;;
 review | rv)
         test -z "$param1" && usage
-        story_path=$(git grep "$param1" "$givotal_ref" | head -n 1)
+        story_path=$(get_story_path "$param1")
         if [ -n "$story_path" ]; then
-                initials=$(git show $(echo "$story_path" | cut -d":" -f1,2) | grep "^__OWNER_INITIALS" | cut -d":" -f2)
+                initials=$(git show "$story_path" | grep "^__OWNER_INITIALS" | cut -d":" -f2)
                 remote=$(git config givotal.remote-$initials)
                 if [ -z "$remote" ]; then
                         echo "No remote repository defined for initials $initials"
                         echo -n "Provide remote name (Ctrl-c to abort): "
-                        read REMOTE
+                        read remote
                         git config givotal.remote-$initials "$remote"
                         echo "Remote $remote added to local givotal config"
                 fi
                 git fetch "$remote"
-                branch=$(git branch -r | grep "$remote/$param1-")
+                branches=($(git branch -r | grep "$remote/$param1-"))
+                if [ ${#branches[@]} -gt 1 ]; then
+                        echo ${branches}
+                        echo "More than one remote branch matches story id"
+                        echo "Please choose desired branch:"
+                        idx=0
+                        for b in ${branches[@]}; do
+                                let "idx++"
+                                echo -n "$idx. "
+                                echo $b
+                        done
+                        echo -n "Choose branch: "
+                        read b
+                        if [ $((b-1)) -ge ${#branches[@]} ] || [ $((b-1)) -lt 0 ]; then
+                                echo "Wrong choice: $b"
+                                exit
+                        fi
+                        branch=${branches[(($b-1))]}
+                fi
                 branch="${branch##*[[:blank:]]}"
                 lbranch=${branch##$remote/} # remote/1234-my -> 1234-my
                 if $(git show-ref --quiet "refs/heads/$lbranch"); then
                         echo "Local branch $lbranch exists"
                         echo "Merge remote (default) or replace? [m/r] "
-                        read MR
+                        read mr
                         case "$mr" in
                                 [rR] )
                                         # replace branch in case there was a forced update
