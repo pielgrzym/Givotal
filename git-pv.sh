@@ -28,26 +28,6 @@ function modify_story {
         fi
 }
 
-function register_story {
-        prev_ref="$(git symbolic-ref HEAD 2>/dev/null)"
-        prev_ref=${prev_ref##refs/heads/}
-        git checkout "$givotal_ref" &>/dev/null
-        if [ -d "branches" ]; then
-                if [ -e "branches/$1" ]; then
-                        echo "Story already started"
-                        git checkout "$prev_ref" &>/dev/null
-                        exit 1
-                fi
-                echo "$2" > branches/$1
-        else
-                mkdir branches
-                echo "$2" > branches/$1
-        fi
-        git add branches
-        git commit -m "Registered new pivotal branch" &>/dev/null
-        git checkout "$prev_ref" &>/dev/null
-}
-
 function get_story_path {
         story_id=$1
         matches=($(git grep -l "$story_id" "$givotal_ref" current backlog | sort ))
@@ -135,7 +115,6 @@ start | s)
         echo -n "Branch suffix: "
         read branch_suffix
         branch_name="$param1-${branch_suffix// /-}"
-        register_story "$param1" "$branch_name"
         if $(git show-ref --quiet "$branch_name"); then
                 echo "Branch $branch_name exists. Checking out..."
                 git checkout "$branch_name"
@@ -175,7 +154,6 @@ deliver | dlv)
         elif [ "$story_id" = -2 ]; then
                 echo "You are not on a pivotal story branch"
         elif [ -n "$story_id" ]; then
-                story_id=$(echo "$pivotal_branch" | cut -d":" -f3)
                 modify_story "$story_id" "?story\[current_state\]=delivered"
                 echo -e "Story $story_id: \033[1;33mdelivered\033[0m"
         else
@@ -286,6 +264,30 @@ reject | rj)
         elif [ "$story_id" = -2 ]; then
                 echo "You are not on a pivotal story branch"
         elif [ -n "$story_id" ]; then
+                modify_story "$story_id" "?story\[current_state\]=rejected"
+                git pv comment $story_id
+                echo -e "Story $story_id: \033[1;31mrejected\033[0m"
+        else
+                echo "Unknown error"
+        fi
+        ;;
+comment | com)
+        if [ -n "$param1" ]; then
+                story_path=$(get_story_path "$param1")
+                if [ "$story_path" = -1 ]; then
+                        echo "Ambigous  or invalid story id"
+                        exit 1
+                else
+                        story_id=$param1
+                fi
+        else
+                story_id=$(get_storyid_from_branch)
+        fi
+        if [ "$story_id" = -1 ]; then
+                echo "Ambigous or invalid story id in branch name"
+        elif [ "$story_id" = -2 ]; then
+                echo "You are not on a pivotal story branch"
+        elif [ -n "$story_id" ]; then
                 editor=$(git config core.editor)
                 tmp_filename=/tmp/"$story_id"-reject-$(date -I)
                 if [ -f "$tmp_filename" ]; then
@@ -293,14 +295,12 @@ reject | rj)
                 fi
                 $editor "$tmp_filename"
                 msg=$(<$tmp_filename)
-                modify_story "$story_id" "?story\[current_state\]=rejected"
                 token=$(git config givotal.token)
                 project_id=$(git config givotal.projectid)
                 curl -s -o /dev/null -H "X-TrackerToken: $token" -X POST -H "Content-type: application/xml" \
                         -d "<note><text>$msg</text></note>" \
                         "https://www.pivotaltracker.com/services/v3/projects/$project_id/stories/$story_id/notes" 1>/dev/null
                 rm -rf "$tmp_filename"
-                echo -e "Story $story_id: \033[1;31mrejected\033[0m"
         else
                 echo "Unknown error"
         fi
