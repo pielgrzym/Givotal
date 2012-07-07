@@ -1,27 +1,27 @@
 #!/bin/sh
 
-USAGE="fetch"
+usage="fetch"
 . "$(git --exec-path)/git-sh-setup"
 
 test -z "$1" && usage
-ACTION="$1"; shift
-PARAM1="$1"; shift
+action="$1"; shift
+param1="$1"; shift
 
-INTEGRATION_BRANCH=$(git config givotal.integration-branch)
+integration_branch=$(git config givotal.integration-branch)
 
-test -z "$GIVOTAL_REF" && GIVOTAL_REF="$(git config givotal.ref)"
-test -z "$GIVOTAL_REF" && GIVOTAL_REF="refs/heads/pivotal/main"
+test -z "$givotal_ref" && givotal_ref="$(git config givotal.ref)"
+test -z "$givotal_ref" && givotal_ref="refs/heads/pivotal/main"
 
 function print_tasks {
-        git grep "^__PP|" "$GIVOTAL_REF":"$1" | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
+        git grep "^__PP|" "$givotal_ref":"$1" | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
 }
 
 function modify_story {
-        STORY_ID=$1
-        TOKEN=$(git config givotal.token)
-        PROJECT_ID=$(git config givotal.projectid)
-        curl -s -o /dev/null -H "X-TrackerToken: $TOKEN" -X PUT -H "Content-Length: 0" \
-              "https://www.pivotaltracker.com/services/v3/projects/$PROJECT_ID/stories/$STORY_ID$2" 1> /dev/null
+        story_id=$1
+        token=$(git config givotal.token)
+        project_id=$(git config givotal.projectid)
+        curl -s -o /dev/null -H "X-TrackerToken: $token" -x PUT -h "Content-Length: 0" \
+              "https://www.pivotaltracker.com/services/v3/projects/$project_id/stories/$story_id$2" 1> /dev/null
         if [ "${?}" -ne "0" ]; then
                 echo "Error: story modification failed"
                 exit 1
@@ -29,9 +29,9 @@ function modify_story {
 }
 
 function register_story {
-        PREV_REF="$(git symbolic-ref HEAD 2>/dev/null)"
-        PREV_REF=${PREV_REF##refs/heads/}
-        git checkout "$GIVOTAL_REF" &>/dev/null
+        prev_ref="$(git symbolic-ref HEAD 2>/dev/null)"
+        prev_ref=${prev_ref##refs/heads/}
+        git checkout "$givotal_ref" &>/dev/null
         if [ -d "branches" ]; then
                 if [ -e "branches/$1" ]; then
                         echo "Story already started"
@@ -44,21 +44,21 @@ function register_story {
         fi
         git add branches
         git commit -m "Registered new pivotal branch" &>/dev/null
-        git checkout "$PREV_REF" &>/dev/null
+        git checkout "$prev_ref" &>/dev/null
 }
 
-case "$ACTION" in
+case "$action" in
 fetch | fetchall)
-        PREV_REF="$(git symbolic-ref HEAD 2>/dev/null)"
-        PREV_REF=${PREV_REF##refs/heads/}
-        if $(git show-ref --quiet "$GIVOTAL_REF"); then
-                git checkout "$GIVOTAL_REF" &>/dev/null
+        prev_ref="$(git symbolic-ref HEAD 2>/dev/null)"
+        prev_ref=${prev_ref##refs/heads/}
+        if $(git show-ref --quiet "$givotal_ref"); then
+                git checkout "$givotal_ref" &>/dev/null
         else
                 say "Creating Givotal orphaned branch..."
-                git checkout --orphan "$GIVOTAL_REF" &>/dev/null
+                git checkout --orphan "$givotal_ref" &>/dev/null
                 git rm -rf . &>/dev/null
         fi
-        if [ "$ACTION" = 'fetch' ]; then
+        if [ "$action" = 'fetch' ]; then
                 purr.py --current
                 git add current
                 purr.py --mywork
@@ -72,7 +72,7 @@ fetch | fetchall)
                 git add backlog
         fi
         git commit -m "Fetchted pivotal data" &>/dev/null
-        git checkout "$PREV_REF" &>/dev/null
+        git checkout "$prev_ref" &>/dev/null
         echo -e "\033[1;36mDone fetching pivotal data\033[0m"
         ;;
 current | cur)
@@ -83,123 +83,123 @@ backlog | bck)
         do
                 echo -e "\033[0;30m\033[47m * $iteration | =========================== \033[0m" 
                 print_tasks "backlog/$iteration"
-        done <<< "$(git ls-tree "$GIVOTAL_REF":backlog --name-only | sort -h)"
+        done <<< "$(git ls-tree "$givotal_ref":backlog --name-only | sort -h)"
         ;;
 mywork | my)
         print_tasks "mywork"
         ;;
 start | s)
-        test -z "$PARAM1" && usage
-        STORY_ID="$PARAM1"
-        USERNAME=$(git config user.name)
-        modify_story "$STORY_ID" "?story\[current_state\]=started&story\[owned_by\]=${USERNAME// /%20}"
+        test -z "$param1" && usage
+        story_id="$param1"
+        username=$(git config user.name)
+        modify_story "$story_id" "?story\[current_state\]=started&story\[owned_by\]=${username// /%20}"
         echo -n "Branch suffix: "
-        read BRANCH_SUFFIX
-        BRANCH_NAME="$PARAM1-${BRANCH_SUFFIX// /-}"
-        register_story "$PARAM1" "$BRANCH_NAME"
-        if $(git show-ref --quiet "$BRANCH_NAME"); then
-                echo "Branch $BRANCH_NAME exists. Checking out..."
-                git checkout "$BRANCH_NAME"
+        read branch_suffix
+        branch_name="$param1-${branch_suffix// /-}"
+        register_story "$param1" "$branch_name"
+        if $(git show-ref --quiet "$branch_name"); then
+                echo "Branch $branch_name exists. Checking out..."
+                git checkout "$branch_name"
                 exit
         fi
-        git checkout -b "$BRANCH_NAME"
+        git checkout -b "$branch_name"
         ;;
 show | sh)
-        STORY_PATH=$(git grep "$PARAM1" "$GIVOTAL_REF" | head -n 1)
-        if [ -n "$STORY_PATH" ]; then
-                git show $(echo "$STORY_PATH" | cut -d":" -f1,2) | grep -v "^__"
+        story_path=$(git grep "$param1" "$givotal_ref" | head -n 1)
+        if [ -n "$story_path" ]; then
+                git show $(echo "$story_path" | cut -d":" -f1,2) | grep -v "^__"
         fi
         ;;
 finish | f)
-        CURRENT_REF="$(git symbolic-ref HEAD 2>/dev/null)"
-        CURRENT_REF=${CURRENT_REF##refs/heads/}
-        PIVOTAL_BRANCH=$(git grep "$CURRENT_REF" "$GIVOTAL_REF":branches)
-        if [ -n "$PIVOTAL_BRANCH" ] && [ "$PIVOTAL_BRANCH" != "" ]; then
-                STORY_ID=$(echo "$PIVOTAL_BRANCH" | cut -d":" -f3)
-                modify_story "$STORY_ID" "?story\[current_state\]=finished"
+        current_ref="$(git symbolic-ref HEAD 2>/dev/null)"
+        current_ref=${current_ref##refs/heads/}
+        pivotal_branch=$(git grep "$current_ref" "$givotal_ref":branches)
+        if [ -n "$pivotal_branch" ] && [ "$pivotal_branch" != "" ]; then
+                story_id=$(echo "$pivotal_branch" | cut -d":" -f3)
+                modify_story "$story_id" "?story\[current_state\]=finished"
         else
                 echo "You are not on a pivotal story branch"
         fi
         ;;
 deliver | dlv)
-        CURRENT_REF="$(git symbolic-ref HEAD 2>/dev/null)"
-        CURRENT_REF=${CURRENT_REF##refs/heads/}
-        PIVOTAL_BRANCH=$(git grep "$CURRENT_REF" $GIVOTAL_REF:branches)
-        if [ -n "$PIVOTAL_BRANCH" ] && [ "$PIVOTAL_BRANCH" != "" ]; then
-                STORY_ID=$(echo "$PIVOTAL_BRANCH" | cut -d":" -f3)
-                modify_story "$STORY_ID" "?story\[current_state\]=delivered"
+        current_ref="$(git symbolic-ref HEAD 2>/dev/null)"
+        current_ref=${current_ref##refs/heads/}
+        pivotal_branch=$(git grep "$current_ref" $givotal_ref:branches)
+        if [ -n "$pivotal_branch" ] && [ "$pivotal_branch" != "" ]; then
+                story_id=$(echo "$pivotal_branch" | cut -d":" -f3)
+                modify_story "$story_id" "?story\[current_state\]=delivered"
         else
                 echo "You are not on a pivotal story branch"
                 exit
         fi
-        echo "Do you want to rebase against \"$INTEGRATION_BRANCH\" branch?"
+        echo "Do you want to rebase against \"$integration_branch\" branch?"
         echo -en "(if the task is \033[1;31m redelivered\033[0m answer 'no') [y] "
-        read YNO
-        case $YNO in
+        read yno
+        case $yno in
                 [nN] )
-                        git push origin "$CURRENT_REF"
+                        git push origin "$current_ref"
                         ;;
                 *)
-                        git rebase -i "$INTEGRATION_BRANCH"
-                        git push origin "$CURRENT_REF"
+                        git rebase -i "$integration_branch"
+                        git push origin "$current_ref"
                         ;;
         esac
         ;;
 review | rv)
-        test -z "$PARAM1" && usage
-        STORY_PATH=$(git grep "$PARAM1" "$GIVOTAL_REF" | head -n 1)
-        if [ -n "$STORY_PATH" ]; then
-                INITIALS=$(git show $(echo "$STORY_PATH" | cut -d":" -f1,2) | grep "^__OWNER_INITIALS" | cut -d":" -f2)
-                REMOTE=$(git config givotal.remote-$INITIALS)
-                if [ -z "$REMOTE" ]; then
-                        echo "No remote repository defined for initials $INITIALS"
+        test -z "$param1" && usage
+        story_path=$(git grep "$param1" "$givotal_ref" | head -n 1)
+        if [ -n "$story_path" ]; then
+                initials=$(git show $(echo "$story_path" | cut -d":" -f1,2) | grep "^__OWNER_INITIALS" | cut -d":" -f2)
+                remote=$(git config givotal.remote-$initials)
+                if [ -z "$remote" ]; then
+                        echo "No remote repository defined for initials $initials"
                         echo -n "Provide remote name (Ctrl-c to abort): "
                         read REMOTE
-                        git config givotal.remote-$INITIALS "$REMOTE"
-                        echo "Remote $REMOTE added to local givotal config"
+                        git config givotal.remote-$initials "$remote"
+                        echo "Remote $remote added to local givotal config"
                 fi
-                git fetch "$REMOTE"
-                BRANCH=$(git branch -r | grep "$REMOTE/$PARAM1-")
-                BRANCH="${BRANCH##*[[:blank:]]}"
-                LBRANCH=${BRANCH##$REMOTE/} # remote/1234-my -> 1234-my
-                if $(git show-ref --quiet "refs/heads/$LBRANCH"); then
-                        echo "Local branch $LBRANCH exists"
+                git fetch "$remote"
+                branch=$(git branch -r | grep "$remote/$param1-")
+                branch="${branch##*[[:blank:]]}"
+                lbranch=${branch##$remote/} # remote/1234-my -> 1234-my
+                if $(git show-ref --quiet "refs/heads/$lbranch"); then
+                        echo "Local branch $lbranch exists"
                         echo "Merge remote (default) or replace? [m/r] "
                         read MR
-                        case "$MR" in
+                        case "$mr" in
                                 [rR] )
                                         # replace branch in case there was a forced update
                                         git checkout "$(git config givotal.integration-branch)"
-                                        git branch -D "$LBRANCH"
-                                        git checkout -t "$BRANCH"
+                                        git branch -D "$lbranch"
+                                        git checkout -t "$branch"
                                         ;;
                                 *)
                                         # just add fixes after redelivery
-                                        git checkout "$LBRANCH"
-                                        git merge "$BRANCH"
+                                        git checkout "$lbranch"
+                                        git merge "$branch"
                                         ;;
                         esac
                 else
                         # create new tracking branch to see the work
-                        git checkout -t "$BRANCH"
+                        git checkout -t "$branch"
                 fi
         fi
         ;;
 accept | ac)
-        STORY_REF="$(git symbolic-ref HEAD 2>/dev/null)"
-        STORY_REF=${STORY_REF##refs/heads/}
-        STORY_ID=${STORY_REF%%-*}
-        if [ -n "$STORY_ID" ]; then
-                modify_story "$STORY_ID" "?story\[current_state\]=accepted"
-                echo -en "\033[1;34mMerge story into '$INTEGRATION_BRANCH'? [Y/n]\033[0m "
-                read YNO
-                case "$YNO" in
+        story_ref="$(git symbolic-ref HEAD 2>/dev/null)"
+        story_ref=${story_ref##refs/heads/}
+        story_id=${story_ref%%-*}
+        if [ -n "$story_id" ]; then
+                modify_story "$story_id" "?story\[current_state\]=accepted"
+                echo -en "\033[1;34mMerge story into '$integration_branch'? [y/n]\033[0m "
+                read yno
+                case "$yno" in
                         [nN] )
                                 exit
                                 ;;
                         *)
-                                git checkout "$INTEGRATION_BRANCH"
-                                git merge --no-ff "$STORY_REF"
+                                git checkout "$integration_branch"
+                                git merge --no-ff "$story_ref"
                                 ;;
                 esac
         else
@@ -207,24 +207,24 @@ accept | ac)
         fi
         ;;
 reject | rj)
-        STORY_REF="$(git symbolic-ref HEAD 2>/dev/null)"
-        STORY_REF=${STORY_REF##refs/heads/}
-        STORY_ID=${STORY_REF%%-*}
-        if [ -n "$STORY_ID" ]; then
-                EDITOR=$(git config core.editor)
-                TMP_FILENAME=/tmp/"$STORY_ID"-reject-$(date -I)
-                if [ -f "$TMP_FILENAME" ]; then
-                        rm -rf "$TMP_FILENAME"
+        story_ref="$(git symbolic-ref HEAD 2>/dev/null)"
+        story_ref=${story_ref##refs/heads/}
+        story_id=${story_ref%%-*}
+        if [ -n "$story_id" ]; then
+                editor=$(git config core.editor)
+                tmp_filename=/tmp/"$story_id"-reject-$(date -I)
+                if [ -f "$tmp_filename" ]; then
+                        rm -rf "$tmp_filename"
                 fi
-                $EDITOR "$TMP_FILENAME"
-                MSG=$(<$TMP_FILENAME)
-                modify_story "$STORY_ID" "?story\[current_state\]=rejected"
-                TOKEN=$(git config givotal.token)
-                PROJECT_ID=$(git config givotal.projectid)
-                curl -s -o /dev/null -H "X-TrackerToken: $TOKEN" -X POST -H "Content-type: application/xml" \
-                        -d "<note><text>$MSG</text></note>" \
-                        "https://www.pivotaltracker.com/services/v3/projects/$PROJECT_ID/stories/$STORY_ID/notes" 1>/dev/null
-                rm -rf "$TMP_FILENAME"
+                $editor "$tmp_filename"
+                msg=$(<$tmp_filename)
+                modify_story "$story_id" "?story\[current_state\]=rejected"
+                token=$(git config givotal.token)
+                project_id=$(git config givotal.projectid)
+                curl -s -o /dev/null -H "X-TrackerToken: $token" -X POST -H "Content-type: application/xml" \
+                        -d "<note><text>$msg</text></note>" \
+                        "https://www.pivotaltracker.com/services/v3/projects/$project_id/stories/$story_id/notes" 1>/dev/null
+                rm -rf "$tmp_filename"
         else
                 echo "Not a story branch"
         fi
