@@ -20,7 +20,7 @@ function modify_story {
         story_id=$1
         token=$(git config givotal.token)
         project_id=$(git config givotal.projectid)
-        curl -s -o /dev/null -H "X-TrackerToken: $token" -x PUT -h "Content-Length: 0" \
+        curl -s -o /dev/null -H "X-TrackerToken: $token" -X PUT -H "Content-Length: 0" \
               "https://www.pivotaltracker.com/services/v3/projects/$project_id/stories/$story_id$2" 1> /dev/null
         if [ "${?}" -ne "0" ]; then
                 echo "Error: story modification failed"
@@ -141,6 +141,7 @@ finish | f)
         if [ -n "$pivotal_branch" ] && [ "$pivotal_branch" != "" ]; then
                 story_id=$(echo "$pivotal_branch" | cut -d":" -f3)
                 modify_story "$story_id" "?story\[current_state\]=finished"
+                echo -e "Story $story_id: \033[0;34mfinished\033[0m"
         else
                 echo "You are not on a pivotal story branch"
         fi
@@ -152,6 +153,7 @@ deliver | dlv)
         if [ -n "$pivotal_branch" ] && [ "$pivotal_branch" != "" ]; then
                 story_id=$(echo "$pivotal_branch" | cut -d":" -f3)
                 modify_story "$story_id" "?story\[current_state\]=delivered"
+                echo -e "Story $story_id: \033[1;33mdelivered\033[0m"
         else
                 echo "You are not on a pivotal story branch"
                 exit
@@ -267,6 +269,7 @@ reject | rj)
                         -d "<note><text>$msg</text></note>" \
                         "https://www.pivotaltracker.com/services/v3/projects/$project_id/stories/$story_id/notes" 1>/dev/null
                 rm -rf "$tmp_filename"
+                echo -e "Story $story_id: \033[1;31mrejected\033[0m"
         else
                 echo "Not a story branch"
         fi
