@@ -52,7 +52,7 @@ function get_storyid_from_branch {
         ref="$(git symbolic-ref HEAD 2>/dev/null)"
         branch=${ref##refs/heads/}
         story_id=${branch%%-*}
-        if [[ $story_id =~ [0-9] ]]; then
+        if [[ $story_id =~ [0-9]* ]]; then
                 story=$(get_story_path "$story_id")
         else
                 echo -2
