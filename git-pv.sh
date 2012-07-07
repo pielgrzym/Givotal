@@ -51,9 +51,9 @@ function register_story {
 function get_story_path {
         story_id=$1
         matches=($(git grep -l "$story_id" "$givotal_ref" current backlog | sort ))
-        if [ ${#matches[@]} -gt 1 ]; then
-                echo "Ambigous story id: $story_id"
-                return 1
+        if [ ${#matches[@]} -gt 1 ] || [ ${#matches[@]} = 0 ]; then
+                echo -1
+                return
         fi
         # echo $(git grep -l "$story_id" "$givotal_ref" current backlog | sort )
         # for m in ${matches[@]}; do
@@ -65,6 +65,24 @@ function get_story_path {
         else
                 echo 0
                 return
+        fi
+}
+
+function get_storyid_from_branch {
+        ref="$(git symbolic-ref HEAD 2>/dev/null)"
+        branch=${ref##refs/heads/}
+        story_id=${branch%%-*}
+        if [[ $story_id =~ [0-9] ]]; then
+                story=$(get_story_path "$story_id")
+        else
+                echo -2
+                return
+        fi
+        if [ -z $story ] || [ $story = -1 ]; then
+                echo -1
+                return
+        else
+                echo $story_id
         fi
 }
 
@@ -129,33 +147,39 @@ show | sh)
         # get_story_path "$param1"
         # exit
         story_path=$(get_story_path "$param1")
-        if [ -n "$story_path" ]; then
+        if [ "$story_path" = -1 ]; then
+                echo "Ambigous  or invalid story id"
+                exit 1
+        elif [ -n "$story_path" ]; then
                 echo $story_path
                 git show "$story_path" | grep -v "^__"
         fi
         ;;
 finish | f)
-        current_ref="$(git symbolic-ref HEAD 2>/dev/null)"
-        current_ref=${current_ref##refs/heads/}
-        pivotal_branch=$(git grep "$current_ref" "$givotal_ref":branches)
-        if [ -n "$pivotal_branch" ] && [ "$pivotal_branch" != "" ]; then
-                story_id=$(echo "$pivotal_branch" | cut -d":" -f3)
+        story_id=$(get_storyid_from_branch)
+        if [ "$story_id" = -1 ]; then
+                echo "Ambigous or invalid story id in branch name"
+        elif [ "$story_id" = -2 ]; then
+                echo "You are not on a pivotal story branch"
+        elif [ -n "$story_id" ]; then
                 modify_story "$story_id" "?story\[current_state\]=finished"
                 echo -e "Story $story_id: \033[0;34mfinished\033[0m"
         else
-                echo "You are not on a pivotal story branch"
+                echo "Unknown error"
         fi
         ;;
 deliver | dlv)
-        current_ref="$(git symbolic-ref HEAD 2>/dev/null)"
-        current_ref=${current_ref##refs/heads/}
-        pivotal_branch=$(git grep "$current_ref" $givotal_ref:branches)
-        if [ -n "$pivotal_branch" ] && [ "$pivotal_branch" != "" ]; then
+        story_id=$(get_storyid_from_branch)
+        if [ "$story_id" = -1 ]; then
+                echo "Ambigous or invalid story id in branch name"
+        elif [ "$story_id" = -2 ]; then
+                echo "You are not on a pivotal story branch"
+        elif [ -n "$story_id" ]; then
                 story_id=$(echo "$pivotal_branch" | cut -d":" -f3)
                 modify_story "$story_id" "?story\[current_state\]=delivered"
                 echo -e "Story $story_id: \033[1;33mdelivered\033[0m"
         else
-                echo "You are not on a pivotal story branch"
+                echo "Unknown error"
                 exit
         fi
         echo "Do you want to rebase against \"$integration_branch\" branch?"
@@ -174,7 +198,10 @@ deliver | dlv)
 review | rv)
         test -z "$param1" && usage
         story_path=$(get_story_path "$param1")
-        if [ -n "$story_path" ]; then
+        if [ "$story_path" = -1 ]; then
+                echo "Ambigous  or invalid story id"
+                exit
+        elif [ -n "$story_path" ]; then
                 initials=$(git show "$story_path" | grep "^__OWNER_INITIALS" | cut -d":" -f2)
                 remote=$(git config givotal.remote-$initials)
                 if [ -z "$remote" ]; then
@@ -230,10 +257,12 @@ review | rv)
         fi
         ;;
 accept | ac)
-        story_ref="$(git symbolic-ref HEAD 2>/dev/null)"
-        story_ref=${story_ref##refs/heads/}
-        story_id=${story_ref%%-*}
-        if [ -n "$story_id" ]; then
+        story_id=$(get_storyid_from_branch)
+        if [ "$story_id" = -1 ]; then
+                echo "Ambigous or invalid story id in branch name"
+        elif [ "$story_id" = -2 ]; then
+                echo "You are not on a pivotal story branch"
+        elif [ -n "$story_id" ]; then
                 modify_story "$story_id" "?story\[current_state\]=accepted"
                 echo -en "\033[1;34mMerge story into '$integration_branch'? [y/n]\033[0m "
                 read yno
@@ -247,14 +276,16 @@ accept | ac)
                                 ;;
                 esac
         else
-                echo "Not a story branch"
+                echo "Unknown error"
         fi
         ;;
 reject | rj)
-        story_ref="$(git symbolic-ref HEAD 2>/dev/null)"
-        story_ref=${story_ref##refs/heads/}
-        story_id=${story_ref%%-*}
-        if [ -n "$story_id" ]; then
+        story_id=$(get_storyid_from_branch)
+        if [ "$story_id" = -1 ]; then
+                echo "Ambigous or invalid story id in branch name"
+        elif [ "$story_id" = -2 ]; then
+                echo "You are not on a pivotal story branch"
+        elif [ -n "$story_id" ]; then
                 editor=$(git config core.editor)
                 tmp_filename=/tmp/"$story_id"-reject-$(date -I)
                 if [ -f "$tmp_filename" ]; then
@@ -271,7 +302,7 @@ reject | rj)
                 rm -rf "$tmp_filename"
                 echo -e "Story $story_id: \033[1;31mrejected\033[0m"
         else
-                echo "Not a story branch"
+                echo "Unknown error"
         fi
         ;;
 *)
