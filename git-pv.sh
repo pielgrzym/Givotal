@@ -30,7 +30,7 @@ function modify_story {
 
 function get_story_path {
         story_id=$1
-        matches=($(git grep -l "$story_id" "$givotal_ref" current backlog | sort ))
+        matches=($(git grep -l "$story_id" "$givotal_ref" -- current backlog | sort ))
         if [ ${#matches[@]} -gt 1 ] || [ ${#matches[@]} = 0 ]; then
                 echo -1
                 return
@@ -257,8 +257,10 @@ accept | ac)
                         exit
                         ;;
                 *)
+                        prev_ref="$(git symbolic-ref HEAD 2>/dev/null)"
+                        prev_ref=${prev_ref##refs/heads/}
                         git checkout "$integration_branch"
-                        git merge --no-ff "$story_ref"
+                        git merge --no-ff "$prev_ref"
                         ;;
         esac
         ;;
