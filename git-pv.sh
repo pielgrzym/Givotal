@@ -134,6 +134,11 @@ mywork | my)
 start | s)
         test -z "$param1" && usage
         story_id="$param1"
+        story=$(get_story_path "$story_id")
+        if [ -z $story ] || [ $story = -1 ]; then
+                echo "Ambigous  or invalid story id"
+                exit 1
+        fi
         username=$(git config user.name)
         modify_story "$story_id" "?story\[current_state\]=started&story\[owned_by\]=${username// /%20}"
         echo -n "Branch suffix: "
