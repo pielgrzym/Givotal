@@ -65,7 +65,9 @@ Show our work:
 
 Show story details:
 
-    git pivotal show 1234567
+    git pivotal show [ 1234567 ]
+
+Without story id givotal tries to fetch id from current branch name (XXXXXXX-some-name; where XXXXXXX is the id)
 
 Start working on a story:
 
@@ -75,12 +77,16 @@ Start working on a story:
 
 Finish a story (being on a branch that belongs to this story):
 
-    git pivotal finish 
+    git pivotal finish [ 1234567 ]
+
+Without story id givotal tries to fetch id from current branch name. 
 
 Deliver a story (being on a branch that belongs to this story):
 
-    git pivotal deliver
+    git pivotal deliver [ 1234567 ]
     Do you want to rebase against 'devel' branch? [y]
+
+Without story id givotal tries to fetch id from current branch name. 
 
 Review a story
 
@@ -92,13 +98,30 @@ Accept a story under review:
     git pivotal accept
     Merge into 'devel'? [Y/n] y
 
+or
+
+    git pivotal accept [ 123456 ]
+
+Without story id givotal tries to fetch id from current branch name. 
+
 Reject a story under review:
 
     git pivotal review 123456
-    git pivotal accept
+    git pivotal reject
 
-This will fire up git core.editor and you can post a reason why the story was rejected.
+or
+
+    git pivotal reject [ 1234567 ]
+
+Without story id givotal tries to fetch id from current branch name. 
+Reject will fire up `git config core.editor` and you can post a reason why the story was rejected.
+
+Comment a story:
+
+    git pivotal comment [ 1234567 ]
     
+Without story id givotal tries to fetch id from current branch name. 
+Commenting also fires up `git config core.editor` to write comment.
 
 To be continued
 ---------------
@@ -109,7 +132,7 @@ There are dozens of features to come:
 * bash/zsh autocompletion of story ids and more
 * <del>story review/accept/reject (with automatic fetch and branch checkout)</del>
 * ability to create custom workflow hooks inside .git/givotal-hooks dir
-* commenting stories
+* <del>commenting stories</del>
 * listing latest comments
 * showing project log
 * filtering stories with tags

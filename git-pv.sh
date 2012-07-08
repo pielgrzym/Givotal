@@ -66,6 +66,30 @@ function get_storyid_from_branch {
         fi
 }
 
+function get_storyid_wrapper {
+        if [ -n "$param1" ]; then
+                story_path=$(get_story_path "$param1")
+                if [ "$story_path" = -1 ]; then
+                        echo "Ambigous  or invalid story id"
+                        exit 1
+                else
+                        story_id=$param1
+                fi
+        else
+                story_id=$(get_storyid_from_branch)
+        fi
+        if [ "$story_id" = -1 ]; then
+                echo "Ambigous or invalid story id in branch name"
+                exit 1
+        elif [ "$story_id" = -2 ]; then
+                echo "You are not on a pivotal story branch"
+                exit 1
+        elif [ -z "$story_id" ]; then
+                echo "Unknown error"
+                exit 1
+        fi
+}
+
 case "$action" in
 fetch | fetchall)
         prev_ref="$(git symbolic-ref HEAD 2>/dev/null)"
@@ -125,7 +149,8 @@ start | s)
 show | sh)
         # get_story_path "$param1"
         # exit
-        story_path=$(get_story_path "$param1")
+        get_storyid_wrapper
+        story_path=$(get_story_path "$story_id")
         if [ "$story_path" = -1 ]; then
                 echo "Ambigous  or invalid story id"
                 exit 1
@@ -135,31 +160,14 @@ show | sh)
         fi
         ;;
 finish | f)
-        story_id=$(get_storyid_from_branch)
-        if [ "$story_id" = -1 ]; then
-                echo "Ambigous or invalid story id in branch name"
-        elif [ "$story_id" = -2 ]; then
-                echo "You are not on a pivotal story branch"
-        elif [ -n "$story_id" ]; then
-                modify_story "$story_id" "?story\[current_state\]=finished"
-                echo -e "Story $story_id: \033[0;34mfinished\033[0m"
-        else
-                echo "Unknown error"
-        fi
+        get_storyid_wrapper
+        modify_story "$story_id" "?story\[current_state\]=finished"
+        echo -e "Story $story_id: \033[0;34mfinished\033[0m"
         ;;
 deliver | dlv)
-        story_id=$(get_storyid_from_branch)
-        if [ "$story_id" = -1 ]; then
-                echo "Ambigous or invalid story id in branch name"
-        elif [ "$story_id" = -2 ]; then
-                echo "You are not on a pivotal story branch"
-        elif [ -n "$story_id" ]; then
-                modify_story "$story_id" "?story\[current_state\]=delivered"
-                echo -e "Story $story_id: \033[1;33mdelivered\033[0m"
-        else
-                echo "Unknown error"
-                exit
-        fi
+        get_storyid_wrapper
+        modify_story "$story_id" "?story\[current_state\]=delivered"
+        echo -e "Story $story_id: \033[1;33mdelivered\033[0m"
         echo "Do you want to rebase against \"$integration_branch\" branch?"
         echo -en "(if the task is \033[1;31m redelivered\033[0m answer 'no') [y] "
         read yno
@@ -235,75 +243,41 @@ review | rv)
         fi
         ;;
 accept | ac)
-        story_id=$(get_storyid_from_branch)
-        if [ "$story_id" = -1 ]; then
-                echo "Ambigous or invalid story id in branch name"
-        elif [ "$story_id" = -2 ]; then
-                echo "You are not on a pivotal story branch"
-        elif [ -n "$story_id" ]; then
-                modify_story "$story_id" "?story\[current_state\]=accepted"
-                echo -en "\033[1;34mMerge story into '$integration_branch'? [y/n]\033[0m "
-                read yno
-                case "$yno" in
-                        [nN] )
-                                exit
-                                ;;
-                        *)
-                                git checkout "$integration_branch"
-                                git merge --no-ff "$story_ref"
-                                ;;
-                esac
-        else
-                echo "Unknown error"
-        fi
+        get_storyid_wrapper
+        modify_story "$story_id" "?story\[current_state\]=accepted"
+        echo -en "\033[1;34mMerge story into '$integration_branch'? [y/n]\033[0m "
+        read yno
+        case "$yno" in
+                [nN] )
+                        exit
+                        ;;
+                *)
+                        git checkout "$integration_branch"
+                        git merge --no-ff "$story_ref"
+                        ;;
+        esac
         ;;
 reject | rj)
-        story_id=$(get_storyid_from_branch)
-        if [ "$story_id" = -1 ]; then
-                echo "Ambigous or invalid story id in branch name"
-        elif [ "$story_id" = -2 ]; then
-                echo "You are not on a pivotal story branch"
-        elif [ -n "$story_id" ]; then
-                modify_story "$story_id" "?story\[current_state\]=rejected"
-                git pv comment $story_id
-                echo -e "Story $story_id: \033[1;31mrejected\033[0m"
-        else
-                echo "Unknown error"
-        fi
+        get_storyid_wrapper
+        modify_story "$story_id" "?story\[current_state\]=rejected"
+        git pv comment $story_id
+        echo -e "Story $story_id: \033[1;31mrejected\033[0m"
         ;;
 comment | com)
-        if [ -n "$param1" ]; then
-                story_path=$(get_story_path "$param1")
-                if [ "$story_path" = -1 ]; then
-                        echo "Ambigous  or invalid story id"
-                        exit 1
-                else
-                        story_id=$param1
-                fi
-        else
-                story_id=$(get_storyid_from_branch)
-        fi
-        if [ "$story_id" = -1 ]; then
-                echo "Ambigous or invalid story id in branch name"
-        elif [ "$story_id" = -2 ]; then
-                echo "You are not on a pivotal story branch"
-        elif [ -n "$story_id" ]; then
-                editor=$(git config core.editor)
-                tmp_filename=/tmp/"$story_id"-reject-$(date -I)
-                if [ -f "$tmp_filename" ]; then
-                        rm -rf "$tmp_filename"
-                fi
-                $editor "$tmp_filename"
-                msg=$(<$tmp_filename)
-                token=$(git config givotal.token)
-                project_id=$(git config givotal.projectid)
-                curl -s -o /dev/null -H "X-TrackerToken: $token" -X POST -H "Content-type: application/xml" \
-                        -d "<note><text>$msg</text></note>" \
-                        "https://www.pivotaltracker.com/services/v3/projects/$project_id/stories/$story_id/notes" 1>/dev/null
+        get_storyid_wrapper
+        editor=$(git config core.editor)
+        tmp_filename=/tmp/"$story_id"-reject-$(date -I)
+        if [ -f "$tmp_filename" ]; then
                 rm -rf "$tmp_filename"
-        else
-                echo "Unknown error"
         fi
+        $editor "$tmp_filename"
+        msg=$(<$tmp_filename)
+        token=$(git config givotal.token)
+        project_id=$(git config givotal.projectid)
+        curl -s -o /dev/null -H "X-TrackerToken: $token" -X POST -H "Content-type: application/xml" \
+                -d "<note><text>$msg</text></note>" \
+                "https://www.pivotaltracker.com/services/v3/projects/$project_id/stories/$story_id/notes" 1>/dev/null
+        rm -rf "$tmp_filename"
         ;;
 *)
 	usage
