@@ -3,92 +3,15 @@
 usage="fetch"
 . "$(git --exec-path)/git-sh-setup"
 
+export GIVOTAL_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")
+
+. $GIVOTAL_DIR/givotal-common
+
 test -z "$1" && usage
 action="$1"; shift
 param1="$1"; shift
 
 integration_branch=$(git config givotal.integration-branch)
-
-test -z "$givotal_ref" && givotal_ref="$(git config givotal.ref)"
-test -z "$givotal_ref" && givotal_ref="refs/heads/pivotal/main"
-
-function print_tasks {
-        git grep "^__PP|" "$givotal_ref":"$1" | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
-}
-
-function modify_story {
-        story_id=$1
-        token=$(git config givotal.token)
-        project_id=$(git config givotal.projectid)
-        curl -s -o /dev/null -H "X-TrackerToken: $token" -X PUT -H "Content-Length: 0" \
-              "https://www.pivotaltracker.com/services/v3/projects/$project_id/stories/$story_id$2" 1> /dev/null
-        if [ "${?}" -ne "0" ]; then
-                echo "Error: story modification failed"
-                exit 1
-        fi
-}
-
-function get_story_path {
-        story_id=$1
-        matches=($(git grep -l "$story_id" "$givotal_ref" -- current backlog | sort ))
-        if [ ${#matches[@]} -gt 1 ] || [ ${#matches[@]} = 0 ]; then
-                echo -1
-                return
-        fi
-        # echo $(git grep -l "$story_id" "$givotal_ref" current backlog | sort )
-        # for m in ${matches[@]}; do
-        #         echo "Candidate: $m"
-        # done
-        if [ -n ${matches[0]} ]; then
-                echo "${matches[0]}"
-                return
-        else
-                echo 0
-                return
-        fi
-}
-
-function get_storyid_from_branch {
-        ref="$(git symbolic-ref HEAD 2>/dev/null)"
-        branch=${ref##refs/heads/}
-        story_id=${branch%%-*}
-        if [[ $story_id =~ [0-9]* ]]; then
-                story=$(get_story_path "$story_id")
-        else
-                echo -2
-                return
-        fi
-        if [ -z $story ] || [ $story = -1 ]; then
-                echo -1
-                return
-        else
-                echo $story_id
-        fi
-}
-
-function get_storyid_wrapper {
-        if [ -n "$param1" ]; then
-                story_path=$(get_story_path "$param1")
-                if [ "$story_path" = -1 ]; then
-                        echo "Ambigous  or invalid story id"
-                        exit 1
-                else
-                        story_id=$param1
-                fi
-        else
-                story_id=$(get_storyid_from_branch)
-        fi
-        if [ "$story_id" = -1 ]; then
-                echo "Ambigous or invalid story id in branch name"
-                exit 1
-        elif [ "$story_id" = -2 ]; then
-                echo "You are not on a pivotal story branch"
-                exit 1
-        elif [ -z "$story_id" ]; then
-                echo "Unknown error"
-                exit 1
-        fi
-}
 
 case "$action" in
 fetch | fetchall)
