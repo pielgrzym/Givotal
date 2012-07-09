@@ -11,8 +11,6 @@ test -z "$1" && usage
 action="$1"; shift
 param1="$1"; shift
 
-integration_branch=$(git config givotal.integration-branch)
-
 case "$action" in
 fetch | fetchall)
         prev_ref="$(git symbolic-ref HEAD 2>/dev/null)"

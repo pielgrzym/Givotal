@@ -3,6 +3,8 @@
 test -z "$givotal_ref" && givotal_ref="$(git config givotal.ref)"
 test -z "$givotal_ref" && givotal_ref="refs/heads/pivotal/main"
 
+integration_branch=$(git config givotal.integration-branch)
+
 function print_tasks {
         git grep "^__PP|" "$givotal_ref":"$1" | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
 }
