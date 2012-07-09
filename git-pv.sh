@@ -252,6 +252,10 @@ review | rv)
 accept | ac)
         get_storyid_wrapper
         modify_story "$story_id" "?story\[current_state\]=accepted"
+        # in case we want to accept a story not checking out it's branch
+        if [ "$(get_storyid_from_branch)" -le "0" ]; then
+                exit 0
+        fi
         echo -en "\033[1;34mMerge story into '$integration_branch'? [y/n]\033[0m "
         read yno
         case "$yno" in
