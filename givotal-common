@@ -59,7 +59,7 @@ function get_storyid_from_branch {
         fi
 }
 
-function get_storyid_wrapper {
+function require_storyid {
         if [ -n "$param1" ]; then
                 story_path=$(get_story_path "$param1")
                 if [ "$story_path" = -1 ]; then

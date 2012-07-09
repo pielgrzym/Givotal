@@ -75,7 +75,7 @@ start | s)
 show | sh)
         # get_story_path "$param1"
         # exit
-        get_storyid_wrapper
+        require_storyid
         story_path=$(get_story_path "$story_id")
         if [ "$story_path" = -1 ]; then
                 echo "Ambigous  or invalid story id"
@@ -86,12 +86,12 @@ show | sh)
         fi
         ;;
 finish | f)
-        get_storyid_wrapper
+        require_storyid
         modify_story "$story_id" "?story\[current_state\]=finished"
         echo -e "Story $story_id: \033[0;34mfinished\033[0m"
         ;;
 deliver | dlv)
-        get_storyid_wrapper
+        require_storyid
         modify_story "$story_id" "?story\[current_state\]=delivered"
         echo -e "Story $story_id: \033[1;33mdelivered\033[0m"
         echo "Do you want to rebase against \"$integration_branch\" branch?"
@@ -171,7 +171,7 @@ review | rv)
         fi
         ;;
 accept | ac)
-        get_storyid_wrapper
+        require_storyid
         modify_story "$story_id" "?story\[current_state\]=accepted"
         # in case we want to accept a story not checking out it's branch
         if [ "$(get_storyid_from_branch)" -le "0" ]; then
@@ -192,13 +192,13 @@ accept | ac)
         esac
         ;;
 reject | rj)
-        get_storyid_wrapper
+        require_storyid
         modify_story "$story_id" "?story\[current_state\]=rejected"
         git pv comment $story_id
         echo -e "Story $story_id: \033[1;31mrejected\033[0m"
         ;;
 comment | com)
-        get_storyid_wrapper
+        require_storyid
         editor=$(git config core.editor)
         tmp_filename=/tmp/"$story_id"-reject-$(date -I)
         if [ -f "$tmp_filename" ]; then
