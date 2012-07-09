@@ -221,6 +221,8 @@ review | rv)
                                 exit
                         fi
                         branch=${branches[(($b-1))]}
+                else
+                        branch=${branches[0]}
                 fi
                 branch="${branch##*[[:blank:]]}"
                 lbranch=${branch##$remote/} # remote/1234-my -> 1234-my
