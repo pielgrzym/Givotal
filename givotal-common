@@ -23,7 +23,7 @@ function modify_story {
 
 function get_story_path {
         story_id=$1
-        matches=($(git grep -l "$story_id" "$givotal_ref" -- current backlog | sort ))
+        matches=($(git grep -l "^__PP.*$story_id" "$givotal_ref" -- current backlog | sort ))
         if [ ${#matches[@]} -gt 1 ] || [ ${#matches[@]} = 0 ]; then
                 echo -1
                 return
