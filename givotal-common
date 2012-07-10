@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 test -z "$givotal_ref" && givotal_ref="$(git config givotal.ref)"
 test -z "$givotal_ref" && givotal_ref="refs/heads/pivotal/main"
