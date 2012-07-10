@@ -29,7 +29,6 @@ get_story_path()
         matches=($(git grep -l "^__PP.*$story_id" "$givotal_ref" -- current backlog | sort ))
         if (( ${#matches[@]} != 1 )); then
                 echo -1
-                return
         else
                 echo "${matches[0]}"
         fi
