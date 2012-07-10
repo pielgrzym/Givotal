@@ -15,7 +15,7 @@ case "$action" in
 fetch | fetchall)
         prev_ref="$(git symbolic-ref HEAD 2>/dev/null)"
         prev_ref=${prev_ref##refs/heads/}
-        if $(git show-ref --quiet "$givotal_ref"); then
+        if git show-ref --quiet "$givotal_ref"; then
                 git checkout "$givotal_ref" &>/dev/null
         else
                 say "Creating Givotal orphaned branch..."
@@ -65,7 +65,7 @@ start | s)
         echo -n "Branch suffix: "
         read branch_suffix
         branch_name="$param1-${branch_suffix// /-}"
-        if $(git show-ref --quiet "$branch_name"); then
+        if git show-ref --quiet "$branch_name"; then
                 echo "Branch $branch_name exists. Checking out..."
                 git checkout "$branch_name"
                 exit
@@ -149,7 +149,7 @@ review | rv)
                 fi
                 branch="${branch##*[[:blank:]]}"
                 lbranch=${branch##$remote/} # remote/1234-my -> 1234-my
-                if $(git show-ref --quiet "refs/heads/$lbranch"); then
+                if git show-ref --quiet "refs/heads/$lbranch"; then
                         echo "Local branch $lbranch exists"
                         echo "Merge remote (default) or replace? [m/r] "
                         read mr
