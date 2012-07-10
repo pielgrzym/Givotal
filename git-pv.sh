@@ -55,11 +55,12 @@ mywork | my)
 start | s)
         test -z "$param1" && usage
         story_id="$param1"
-        story=$(get_story_path "$story_id")
-        if [ -z $story ] || [ $story = -1 ]; then
-                echo "Ambigous  or invalid story id"
+        if ! story=$(get_story_path "$story_id"); then
+                echo "Ambigous or invalid story id"
                 exit 1
         fi
+        echo $story
+        exit
         username=$(git config user.name)
         modify_story "$story_id" "?story\[current_state\]=started&story\[owned_by\]=${username// /%20}"
         echo -n "Branch suffix: "
@@ -73,25 +74,18 @@ start | s)
         git checkout -b "$branch_name"
         ;;
 show | sh)
-        # get_story_path "$param1"
-        # exit
-        require_storyid
+        require_story_id
         story_path=$(get_story_path "$story_id")
-        if [ "$story_path" = -1 ]; then
-                echo "Ambigous  or invalid story id"
-                exit 1
-        elif [ -n "$story_path" ]; then
-                echo $story_path
-                git show "$story_path" | grep -v "^__"
-        fi
+        echo $story_path
+        git show "$story_path" | grep -v "^__"
         ;;
 finish | f)
-        require_storyid
+        require_story_id
         modify_story "$story_id" "?story\[current_state\]=finished"
         echo -e "Story $story_id: \033[0;34mfinished\033[0m"
         ;;
 deliver | dlv)
-        require_storyid
+        require_story_id
         modify_story "$story_id" "?story\[current_state\]=delivered"
         echo -e "Story $story_id: \033[1;33mdelivered\033[0m"
         echo "Do you want to rebase against \"$integration_branch\" branch?"
@@ -173,7 +167,7 @@ review | rv)
         fi
         ;;
 accept | ac)
-        require_storyid
+        require_story_id
         modify_story "$story_id" "?story\[current_state\]=accepted"
         # in case we want to accept a story not checking out it's branch
         if [ "$(get_storyid_from_branch)" -le "0" ]; then
@@ -194,13 +188,13 @@ accept | ac)
         esac
         ;;
 reject | rj)
-        require_storyid
+        require_story_id
         modify_story "$story_id" "?story\[current_state\]=rejected"
         git pv comment $story_id
         echo -e "Story $story_id: \033[1;31mrejected\033[0m"
         ;;
 comment | com)
-        require_storyid
+        require_story_id
         editor=$(git config core.editor)
         tmp_filename=/tmp/"$story_id"-reject-$(date -I)
         if [ -f "$tmp_filename" ]; then

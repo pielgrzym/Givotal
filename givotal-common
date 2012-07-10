@@ -27,10 +27,11 @@ get_story_path()
 {
         story_id=$1
         matches=($(git grep -l "^__PP.*$story_id" "$givotal_ref" -- current backlog | sort ))
-        if (( ${#matches[@]} != 1 )); then
-                echo -1
-        else
+        if (( ${#matches[@]} == 1 )); then
                 echo "${matches[0]}"
+                return 0
+        else
+                return 1
         fi
 }
 
@@ -39,42 +40,28 @@ get_storyid_from_branch()
         ref="$(git symbolic-ref HEAD 2>/dev/null)"
         branch=${ref##refs/heads/}
         story_id=${branch%%-*}
-        if [[ $story_id =~ [0-9]+ ]]; then
-                story=$(get_story_path "$story_id")
+        if [[ $story_id =~ [0-9]+ ]] && get_story_path "$story_id" >/dev/null; then
+                echo $story_id 
+                return 0
         else
-                echo -2
-                return
-        fi
-        if [ -z $story ] || [ $story = -1 ]; then
-                echo -1
-                return
-        else
-                echo $story_id
+                return 1
         fi
 }
 
-require_storyid()
+require_story_id()
 {
-        if [ -n "$param1" ]; then
-                story_path=$(get_story_path "$param1")
-                if [ "$story_path" = -1 ]; then
-                        echo "Ambigous or invalid story id"
-                        exit 1
-                else
+        if [[ -n "$param1" ]]; then
+                if get_story_path "$param1" >/dev/null; then
                         story_id=$param1
+                else
+                        echo "Invalid pivotal storyid"
+                        exit 1
                 fi
         else
-                story_id=$(get_storyid_from_branch)
-        fi
-        if [ "$story_id" = -1 ]; then
-                echo "Ambigous or invalid story id in branch name"
-                exit 1
-        elif [ "$story_id" = -2 ]; then
-                echo "You are not on a pivotal story branch"
-                exit 1
-        elif [ -z "$story_id" ]; then
-                echo "Unknown error"
-                exit 1
+                if ! story_id=$(get_storyid_from_branch); then
+                        echo "Ambigous or invalid story id in branch name"
+                        exit 1
+                fi
         fi
 }
 
