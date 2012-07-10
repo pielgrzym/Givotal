@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 usage="fetch"
 . "$(git --exec-path)/git-sh-setup"
