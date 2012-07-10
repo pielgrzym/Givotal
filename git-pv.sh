@@ -59,8 +59,6 @@ start | s)
                 echo "Ambigous or invalid story id"
                 exit 1
         fi
-        echo $story
-        exit
         username=$(git config user.name)
         modify_story "$story_id" "?story\[current_state\]=started&story\[owned_by\]=${username// /%20}"
         echo -n "Branch suffix: "
@@ -105,72 +103,70 @@ deliver | dlv)
         ;;
 review | rv)
         test -z "$param1" && usage
-        story_path=$(get_story_path "$param1")
-        if [ "$story_path" = -1 ]; then
+        if ! story_path=$(get_story_path "$param1"); then
                 echo "Ambigous  or invalid story id"
-                exit
-        elif [ -n "$story_path" ]; then
-                initials=$(git show "$story_path" | grep "^__OWNER_INITIALS" | cut -d":" -f2)
-                remote=$(git config givotal.remote-$initials)
-                if [ -z "$remote" ]; then
-                        echo "No remote repository defined for initials $initials"
-                        echo -n "Provide remote name (Ctrl-c to abort): "
-                        read remote
-                        git config givotal.remote-$initials "$remote"
-                        echo "Remote $remote added to local givotal config"
+                exit 1
+        fi
+        initials=$(git show "$story_path" | grep "^__OWNER_INITIALS" | cut -d":" -f2)
+        remote=$(git config givotal.remote-$initials)
+        if [ -z "$remote" ]; then
+                echo "No remote repository defined for initials $initials"
+                echo -n "Provide remote name (Ctrl-c to abort): "
+                read remote
+                git config givotal.remote-$initials "$remote"
+                echo "Remote $remote added to local givotal config"
+        fi
+        git fetch "$remote"
+        branches=($(git branch -r | grep "$remote/$param1-"))
+        if [ ${#branches[@]} -gt 1 ]; then
+                echo ${branches}
+                echo "More than one remote branch matches story id"
+                echo "Please choose desired branch:"
+                idx=0
+                for b in ${branches[@]}; do
+                        let "idx++"
+                        echo -n "$idx. "
+                        echo $b
+                done
+                echo -n "Choose branch: "
+                read b
+                if [ $((b-1)) -ge ${#branches[@]} ] || [ $((b-1)) -lt 0 ]; then
+                        echo "Wrong choice: $b"
+                        exit
                 fi
-                git fetch "$remote"
-                branches=($(git branch -r | grep "$remote/$param1-"))
-                if [ ${#branches[@]} -gt 1 ]; then
-                        echo ${branches}
-                        echo "More than one remote branch matches story id"
-                        echo "Please choose desired branch:"
-                        idx=0
-                        for b in ${branches[@]}; do
-                                let "idx++"
-                                echo -n "$idx. "
-                                echo $b
-                        done
-                        echo -n "Choose branch: "
-                        read b
-                        if [ $((b-1)) -ge ${#branches[@]} ] || [ $((b-1)) -lt 0 ]; then
-                                echo "Wrong choice: $b"
-                                exit
-                        fi
-                        branch=${branches[(($b-1))]}
-                else
-                        branch=${branches[0]}
-                fi
-                branch="${branch##*[[:blank:]]}"
-                lbranch=${branch##$remote/} # remote/1234-my -> 1234-my
-                if git show-ref --quiet "refs/heads/$lbranch"; then
-                        echo "Local branch $lbranch exists"
-                        echo "Merge remote (default) or replace? [m/r] "
-                        read mr
-                        case "$mr" in
-                                [rR] )
-                                        # replace branch in case there was a forced update
-                                        git checkout "$(git config givotal.integration-branch)"
-                                        git branch -D "$lbranch"
-                                        git checkout -t "$branch"
-                                        ;;
-                                *)
-                                        # just add fixes after redelivery
-                                        git checkout "$lbranch"
-                                        git merge "$branch"
-                                        ;;
-                        esac
-                else
-                        # create new tracking branch to see the work
-                        git checkout -t "$branch"
-                fi
+                branch=${branches[(($b-1))]}
+        else
+                branch=${branches[0]}
+        fi
+        branch="${branch##*[[:blank:]]}"
+        lbranch=${branch##$remote/} # remote/1234-my -> 1234-my
+        if git show-ref --quiet "refs/heads/$lbranch"; then
+                echo "Local branch $lbranch exists"
+                echo "Merge remote (default) or replace? [m/r] "
+                read mr
+                case "$mr" in
+                        [rR] )
+                                # replace branch in case there was a forced update
+                                git checkout "$(git config givotal.integration-branch)"
+                                git branch -D "$lbranch"
+                                git checkout -t "$branch"
+                                ;;
+                        *)
+                                # just add fixes after redelivery
+                                git checkout "$lbranch"
+                                git merge "$branch"
+                                ;;
+                esac
+        else
+                # create new tracking branch to see the work
+                git checkout -t "$branch"
         fi
         ;;
 accept | ac)
         require_story_id
         modify_story "$story_id" "?story\[current_state\]=accepted"
         # in case we want to accept a story not checking out it's branch
-        if [ "$(get_storyid_from_branch)" -le "0" ]; then
+        if [[ -n "$param1" ]]; then
                 exit 0
         fi
         echo -en "\033[1;34mMerge story into '$integration_branch'? [y/n]\033[0m "
