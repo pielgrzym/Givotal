@@ -96,6 +96,8 @@ deliver | dlv)
         echo -e "Story $story_id: \033[1;33mdelivered\033[0m"
         echo "Do you want to rebase against \"$integration_branch\" branch?"
         echo -en "(if the task is \033[1;31m redelivered\033[0m answer 'no') [y] "
+        current_ref="$(git symbolic-ref HEAD 2>/dev/null)"
+        current_ref=${prev_ref##refs/heads/}
         read yno
         case $yno in
                 [nN] )
