@@ -17,7 +17,7 @@ modify_story()
         project_id=$(git config givotal.projectid)
         curl -s -o /dev/null -H "X-TrackerToken: $token" -X PUT -H "Content-Length: 0" \
               "https://www.pivotaltracker.com/services/v3/projects/$project_id/stories/$story_id$2" 1> /dev/null
-        if [ "${?}" -ne "0" ]; then
+        if [[ "${?}" -ne "0" ]]; then
                 echo "Error: story modification failed"
                 exit 1
         fi
@@ -27,20 +27,11 @@ get_story_path()
 {
         story_id=$1
         matches=($(git grep -l "^__PP.*$story_id" "$givotal_ref" -- current backlog | sort ))
-        if [ ${#matches[@]} -gt 1 ] || [ ${#matches[@]} = 0 ]; then
+        if (( ${#matches[@]} != 1 )); then
                 echo -1
                 return
-        fi
-        # echo $(git grep -l "$story_id" "$givotal_ref" current backlog | sort )
-        # for m in ${matches[@]}; do
-        #         echo "Candidate: $m"
-        # done
-        if [ -n ${matches[0]} ]; then
-                echo "${matches[0]}"
-                return
         else
-                echo 0
-                return
+                echo "${matches[0]}"
         fi
 }
 
@@ -68,7 +59,7 @@ require_storyid()
         if [ -n "$param1" ]; then
                 story_path=$(get_story_path "$param1")
                 if [ "$story_path" = -1 ]; then
-                        echo "Ambigous  or invalid story id"
+                        echo "Ambigous or invalid story id"
                         exit 1
                 else
                         story_id=$param1
