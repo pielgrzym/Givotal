@@ -5,11 +5,13 @@ test -z "$givotal_ref" && givotal_ref="refs/heads/pivotal/main"
 
 integration_branch=$(git config givotal.integration-branch)
 
-function print_tasks {
+print_tasks()
+{
         git grep "^__PP|" "$givotal_ref":"$1" | cut -d "|" -f2,3 | sort -h | cut -d "|" -f2
 }
 
-function modify_story {
+modify_story() 
+{
         story_id=$1
         token=$(git config givotal.token)
         project_id=$(git config givotal.projectid)
@@ -21,7 +23,8 @@ function modify_story {
         fi
 }
 
-function get_story_path {
+get_story_path()
+{
         story_id=$1
         matches=($(git grep -l "^__PP.*$story_id" "$givotal_ref" -- current backlog | sort ))
         if [ ${#matches[@]} -gt 1 ] || [ ${#matches[@]} = 0 ]; then
@@ -41,7 +44,8 @@ function get_story_path {
         fi
 }
 
-function get_storyid_from_branch {
+get_storyid_from_branch()
+{
         ref="$(git symbolic-ref HEAD 2>/dev/null)"
         branch=${ref##refs/heads/}
         story_id=${branch%%-*}
@@ -59,7 +63,8 @@ function get_storyid_from_branch {
         fi
 }
 
-function require_storyid {
+require_storyid()
+{
         if [ -n "$param1" ]; then
                 story_path=$(get_story_path "$param1")
                 if [ "$story_path" = -1 ]; then
