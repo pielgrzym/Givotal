@@ -48,10 +48,10 @@ def populate_dirs(stories, prefix=""):
             else:
                 owner = ""
             story_types = {
-                    'feature': u'Ϝ',
-                    'bug': u'Ḇ',
-                    'chore': u'с',
-                    'release': u'▶',
+                    'feature': u'F',
+                    'bug': u'B',
+                    'chore': u'C',
+                    'release': u'>',
                     }
             story_color = story_colors[story['story_type'][0]]
             extra = ""
