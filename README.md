@@ -153,7 +153,7 @@ To be continued
 There are dozens of features to come:
 
 * rating stories
-* bash/zsh autocompletion of story ids and more
+* <del>bash/zsh autocompletion of story ids and more</del>
 * <del>story review/accept/reject (with automatic fetch and branch checkout)</del>
 * ability to create custom workflow hooks inside .git/givotal-hooks dir
 * <del>commenting stories</del>
