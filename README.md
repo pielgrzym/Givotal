@@ -17,6 +17,30 @@ Clone the repository and put it in your `$PATH` (either by placing repo inside `
 
     export PATH=/givotal/path/to/repo:$PATH
 
+For completion to work you also need a one extra step depending on your shell.
+
+For bash:
+
+    source /givotal/path/to/repo/completion/git-pivotal-completion.bash
+
+For zsh
+
+    source /givotal/path/to/repo/completion/git-pivotal-completion.zsh
+
+Aliases I find usefull (optional step):
+
+    alias gva='git pv accept'
+    alias gvb='git pv backlog'
+    alias gvc='git pv current'
+    alias gvd='git pv deliver'
+    alias gvf='git pv fetchall'
+    alias gvfn='git pv finish'
+    alias gvj='git pv reject'
+    alias gvm='git pv mywork'
+    alias gvr='git pv review'
+    alias gvs='git pv start'
+    alias gvv='git pv show'
+
 Fetch data:
 
     git pivotal fetchall
