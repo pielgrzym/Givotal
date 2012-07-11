@@ -15,17 +15,17 @@ Installation
 
 Clone the repository and put it in your `$PATH` (either by placing repo inside `$PATH` or prepending repository path like below):
 
-    export PATH=/givotal/path/to/repo:$PATH
+    export PATH=<path_to_givotal_source_without_trailing_/_>:$PATH
 
 For completion to work you also need a one extra step depending on your shell.
 
 For bash:
 
-    source /givotal/path/to/repo/completion/git-pivotal-completion.bash
+    source <path_to_givotal_source>/completion/git-pivotal-completion.bash
 
 For zsh
 
-    source /givotal/path/to/repo/completion/git-pivotal-completion.zsh
+    source <path_to_givotal_source>/completion/git-pivotal-completion.zsh
 
 Aliases I find usefull (optional step):
 
