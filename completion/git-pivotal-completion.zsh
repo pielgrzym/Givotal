@@ -1,6 +1,7 @@
 #!/usr/bin/env zsh
 
 GIVOTAL_DIR=$(dirname "$(echo "$0" | sed -e 's,\\,/,g')")/..
+. $GIVOTAL_DIR/givotal-common
 
 _git-pv ()
 {
