@@ -85,19 +85,27 @@ finish | f)
 deliver | dlv)
         require_story_id
         modify_story "$story_id" "?story\[current_state\]=delivered"
+        current_ref="$(git symbolic-ref HEAD 2>/dev/null)"
+        current_ref=${prev_ref##refs/heads/}
+        if ! integration_remote=$(git config givotal.integration-remote); then
+                echo "You haven't defined integration remote yet."
+                echo "Integration remote is the remote repository"
+                echo "to which you push branches for review"
+                echo -n "Enter integration repository name: "
+                read integration_remote
+                git config givotal.integration-remote "$integration_remote"
+        fi
         echo -e "Story $story_id: \033[1;33mdelivered\033[0m"
         echo "Do you want to rebase against \"$integration_branch\" branch?"
         echo -en "(if the task is \033[1;31m redelivered\033[0m answer 'no') [y] "
-        current_ref="$(git symbolic-ref HEAD 2>/dev/null)"
-        current_ref=${prev_ref##refs/heads/}
         read yno
         case $yno in
                 [nN] )
-                        git push origin "$current_ref"
+                        git push "$integration_remote" "$current_ref"
                         ;;
                 *)
                         git rebase -i "$integration_branch"
-                        git push origin "$current_ref"
+                        git push "$integration_remote" "$current_ref"
                         ;;
         esac
         ;;
