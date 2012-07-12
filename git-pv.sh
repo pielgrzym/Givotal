@@ -86,7 +86,7 @@ deliver | dlv)
         require_story_id
         modify_story "$story_id" "?story\[current_state\]=delivered"
         current_ref="$(git symbolic-ref HEAD 2>/dev/null)"
-        current_ref=${prev_ref##refs/heads/}
+        current_ref=${current_ref##refs/heads/}
         if ! integration_remote=$(git config givotal.integration-remote); then
                 echo "You haven't defined integration remote yet."
                 echo "Integration remote is the remote repository"
